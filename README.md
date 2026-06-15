@@ -171,3 +171,4 @@ Plaintext
 ├── admin/ <-- Halaman Kontrol Back-End (Dashboard, Arsip, Berita)
 └── public/ <-- Halaman Akses Tamu (Beranda, Alumni, Pendidikan, Riset)
 💡 Catatan: Pastikan folder public/uploads/slider, public/uploads/alumni, dan public/uploads/dokumen memiliki hak akses tulis (write permission) penuh di perangkat lokal Anda agar fitur upload file media berjalan lancar tanpa hambatan.
+# Pasca-allwebdevelopment
