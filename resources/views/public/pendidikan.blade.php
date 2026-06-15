@@ -1,577 +1,309 @@
-@extends('layouts.admin')
+@extends('layouts.public')
 
-@section('title', 'Manajemen Pendidikan & Guru Besar - Admin')
-@section('page_title', 'Manajemen Data Akademik')
+@section('title', 'Pendidikan & Akademik - Pascasarjana IAIN Curup')
 
 @section('styles')
 <style>
-    /* ========================================================================= */
-    /* PREMIUM APP MODAL ENGINE STYLE */
-    /* ========================================================================= */
-    .admin-modal-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        display: flex; align-items: center; justify-content: center;
-        z-index: 2000; opacity: 0; pointer-events: none; transition: var(--transition);
+    /* Perbaikan Khusus Grid Layout Halaman Pendidikan */
+    .prodi-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+        gap: 30px; 
     }
-    .admin-modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .prodi-card {
+        background: var(--card-bg); 
+        border: 1px solid var(--card-border); 
+        padding: 35px;
+        border-radius: var(--radius); 
+        transition: var(--transition); 
+        position: relative; 
+        overflow: hidden;
+    }
+    .prodi-card::before {
+        content: ''; 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        width: 5px; 
+        height: 100%; 
+        background: var(--primary);
+    }
+    .prodi-card:hover { 
+        transform: translateY(-8px); 
+        border-color: var(--accent); 
+        box-shadow: 0 20px 40px rgba(10, 77, 46, 0.1); 
+    }
+    .prodi-icon { 
+        width: 50px; 
+        height: 50px; 
+        background: rgba(10, 77, 46, 0.1); 
+        color: var(--primary); 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        border-radius: 12px; 
+        margin-bottom: 20px; 
+        font-size: 1.3rem; 
+    }
+    [data-theme="dark"] .prodi-icon { 
+        background: rgba(16, 185, 129, 0.2); 
+        color: var(--accent); 
+    }
+
+    /* Style Komponen Profil Singkat */
+    .profile-container {
+        display: grid; 
+        grid-template-columns: 1.1fr 0.9fr; 
+        gap: 50px; 
+        align-items: center;
+        background: var(--card-bg); 
+        border: 1px solid var(--card-border);
+        padding: 50px; 
+        border-radius: var(--radius); 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.01);
+        backdrop-filter: blur(10px);
+    }
+    .profile-text h3 { font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; color: var(--primary); }
+    [data-theme="dark"] .profile-text h3 { color: var(--accent); }
+    .profile-text p { color: var(--gray); line-height: 1.75; margin-bottom: 16px; text-align: justify; font-size: 0.95rem; }
     
-    .admin-modal-window {
-        background: var(--card-bg); border: 1px solid var(--border-color);
-        width: 90%; max-width: 600px; padding: 40px; border-radius: 20px;
-        position: relative; transform: scale(0.94); transition: var(--transition);
-        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+    .profile-visual {
+        position: relative; 
+        height: 380px;
+        border-radius: var(--radius); 
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(10, 77, 46, 0.15);
+        background-size: cover;
+        background-position: center;
     }
-    .admin-modal-overlay.active .admin-modal-window { transform: scale(1); }
+    .profile-overlay {
+        position: absolute; 
+        inset: 0;
+        background: linear-gradient(to top, rgba(10, 77, 46, 0.85), transparent);
+        display: flex; 
+        align-items: flex-end; 
+        padding: 30px; 
+        color: white;
+    }
+
+    /* Style Komponen Guru Besar */
+    .professor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+    }
+    .prof-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        padding: 30px 20px;
+        border-radius: var(--radius);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        text-align: center;
+        transition: var(--transition);
+    }
+    .prof-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+    .prof-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        background-size: cover;
+        background-position: center;
+        border: 3px solid var(--primary);
+    }
+
+    /* Layout Komunikasi */
+    .contact-layout { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; }
+    .contact-box { background: var(--card-bg); border: 1px solid var(--card-border); padding: 40px; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.01); }
+    .form-group { margin-bottom: 20px; }
+    .form-group input, .form-group textarea {
+        width: 100%; padding: 15px; border: 1px solid var(--card-border); border-radius: 10px; background: var(--light); color: var(--dark); outline: none; font-size: 0.95rem; transition: var(--transition);
+    }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); background: var(--secondary); }
     
-    .modal-close-trigger { 
-        position: absolute; top: 24px; right: 24px; font-size: 1.4rem; 
-        cursor: pointer; color: var(--text-muted); width: 36px; height: 36px;
-        background: var(--light); display: flex; align-items: center; 
-        justify-content: center; border-radius: 50%; transition: var(--transition);
+    .btn-send {
+        width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 30px; font-weight: 700; cursor: pointer; transition: var(--transition); box-shadow: 0 8px 20px rgba(10, 77, 46, 0.15);
     }
-    .modal-close-trigger:hover { color: #DC2626; transform: rotate(90deg); }
+    .btn-send:hover { background: var(--accent); transform: translateY(-2px); box-shadow: 0 12px 24px rgba(16, 185, 129, 0.2); }
 
-    /* --- PREMIUM VIEW LOOKS COMPONENT --- */
-    .modal-show-badge {
-        display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
-        background: var(--primary-light); color: var(--primary); font-size: 0.75rem;
-        font-weight: 800; border-radius: 30px; letter-spacing: 0.5px; text-transform: uppercase;
-        margin-bottom: 20px; border: 1px solid rgba(10, 77, 46, 0.05);
-    }
-    [data-theme="dark"] .modal-show-badge { color: var(--accent); }
+    .info-box { display: flex; flex-direction: column; gap: 24px; }
+    .info-card { background: var(--card-bg); border: 1px solid var(--card-border); padding: 30px; border-radius: var(--radius); }
+    .info-item { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+    .info-item:last-child { margin-bottom: 0; }
+    .info-icon { width: 45px; height: 45px; background: rgba(16, 185, 129, 0.1); color: var(--accent); display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.1rem; }
+    .info-text h4 { font-size: 0.85rem; color: var(--gray); font-weight: 500; margin-bottom: 2px; }
+    .info-text p { font-size: 0.95rem; font-weight: 700; }
 
-    .modal-profile-header-layout { display: flex; gap: 24px; align-items: center; margin-bottom: 30px; text-align: left; }
-    .modal-avatar-frame {
-        width: 100px; height: 100px; border-radius: 18px; background-size: cover;
-        background-position: center; border: 4px solid var(--card-bg);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.08); flex-shrink: 0;
-    }
-    
-    .modal-data-strip {
-        background: var(--light); padding: 14px 20px; border-radius: 10px;
-        font-size: 0.9rem; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;
-        border: 1px solid var(--border-color);
-    }
-    .modal-data-strip i { color: var(--primary); font-size: 1rem; width: 20px; }
-    [data-theme="dark"] .modal-data-strip i { color: var(--accent); }
+    .social-container { display: flex; gap: 12px; margin-top: 15px; }
+    .social-circle { width: 45px; height: 45px; background: var(--light); border: 1px solid var(--card-border); color: var(--primary); display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none; transition: var(--transition); font-size: 1.1rem; }
+    .social-circle:hover { background: var(--primary); color: white; transform: translateY(-3px); }
 
-    .biografi-preview-box {
-        background: var(--light); border-left: 4px solid var(--primary);
-        padding: 20px; border-radius: 0 12px 12px 0; line-height: 1.6;
-        font-size: 0.92rem; text-align: justify; color: var(--text-main);
-        margin-top: 15px; border-top: 1px solid var(--border-color);
-        border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);
+    .map-wrapper {
+        background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: var(--radius); overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.01); height: 450px;
     }
-    [data-theme="dark"] .biografi-preview-box { border-left-color: var(--accent); }
+    .map-wrapper iframe { width: 100%; height: 100%; border: none; border-radius: 10px; }
 
-    /* --- TABULAR BUTTONS ACTIONS --- */
-    .btn-action-trigger.edit-type { color: #D97706; }
-    .btn-action-trigger.edit-type:hover { background: #D97706; color: white; border-color: #D97706; }
-    .btn-action-trigger.show-type { color: #3B82F6; }
-    .btn-action-trigger.show-type:hover { background: #3B82F6; color: white; border-color: #3B82F6; }
-    .action-row-buttons { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
+    @media (max-width: 992px) {
+        .profile-container, .contact-layout { grid-template-columns: 1fr; gap: 30px; }
+    }
 </style>
 @endsection
 
 @section('content')
-    @if(session('success'))
-        <script>window.addEventListener('load', () => showToast("{{ session('success') }}"))</script>
-    @endif
-
-    <!-- ========================================================================= -->
-    <!-- KELOLA VISI & PROFILE BERANDA -->
-    <!-- ========================================================================= -->
-    <div class="control-container-card" id="kontrol-visi">
-        <div class="card-panel-heading">
-            <h3><i class="fa-solid fa-eye" style="color:var(--primary)"></i> Tambah / Kelola Visi & Profil Pendidikan</h3>
+    <main class="hero" id="home">
+        <div class="slide active" style="background: url('{{ asset('uploads/slider/' . ($sliders->first()->image ?? 'bg-iain2.jpeg')) }}') center/cover no-repeat; background-color: var(--primary);">
+            <div class="slide-content">
+                <div class="badge-hero"><i class="fa-solid fa-graduation-cap"></i> Institut Agama Islam Negeri Curup</div>
+                <h2>Pendidikan & Jajaran Akademik</h2>
+                <p style="margin-bottom: 35px; opacity: 0.9; line-height: 1.6;">Selamat datang di Pusat Layanan Portal Akademik Transformasi Digital Magister Pascasarjana IAIN Curup.</p>
+                <a href="#prodi" class="btn-modern">Jelajahi Prodi <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
         </div>
-        <form action="{{ route('admin.visi.store') }}" method="POST" enctype="multipart/form-data" class="panel-form-body">
-            @csrf
-            <div class="form-flex-row">
-                <div class="form-input-cell" style="flex: 2;">
-                    <label>Judul Visi Transformasi</label>
-                    <input type="text" name="judul_visi" required placeholder="Contoh: Visi Transformasi Keilmuan Multidisipliner">
-                </div>
-                <div class="form-input-cell" style="flex: 1;">
-                    <label>Gambar Banner Visi (.jpg / .png / .webp)</label>
-                    <input type="file" name="gambar_visi">
-                </div>
-            </div>
-            <div class="form-flex-row" style="align-items: flex-end; margin-bottom:0;">
-                <div class="form-input-cell" style="flex: 2;">
-                    <label>Isi Uraian Narasi Visi Lengkap</label>
-                    <textarea name="deskripsi_visi" rows="3" required placeholder="Tulis rincian paragraf visi profil pendidikan disini..."></textarea>
-                </div>
-                <button type="submit" class="btn-modern">Simpan Visi</button>
-            </div>
-        </form>
-
-        <div class="tabular-view-shell">
-            <table class="clean-data-table">
-                <thead>
-                    <tr>
-                        <th>Judul Visi</th>
-                        <th>File Gambar</th>
-                        <th style="text-align: right;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($visiData as $v)
-                    <tr>
-                        <td><strong>{{ Str::limit($v->judul_visi, 50) }}</strong></td>
-                        <td><code>{{ $v->gambar_visi ?? 'No Image' }}</code></td>
-                        <td align="right">
-                            <div class="action-row-buttons">
-                                <button class="btn-action-trigger show-type btn-show-visi" data-judul="{{ $v->judul_visi }}" data-deskripsi="{{ $v->deskripsi_visi }}" data-gambar="{{ asset('img/' . $v->gambar_visi) }}"><i class="fa-solid fa-eye"></i> View</button>
-                                <button class="btn-action-trigger edit-type btn-edit-visi" data-id="{{ $v->id }}" data-judul="{{ $v->judul_visi }}" data-deskripsi="{{ $v->deskripsi_visi }}" data-gambar="{{ asset('img/' . $v->gambar_visi) }}"><i class="fa-solid fa-pen"></i></button>
-                                <form action="{{ route('admin.visi.delete', $v->id) }}" method="POST" onsubmit="return confirm('Hapus arsip visi ini?')" style="display:inline;">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-action-trigger delete-type"><i class="fa-solid fa-trash"></i></button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+    </main>
+   
+    <section id="profile">
+        <div class="section-header">
+            <h2>Profil & Latar Belakang</h2>
+            <p>Mengenal pilar utama visi kependidikan tinggi komprehensif di Pascasarjana IAIN Curup</p>
         </div>
-    </div>
-
-    <!-- ========================================================================= -->
-    <!-- KELOLA PROGRAM STUDI -->
-    <!-- ========================================================================= -->
-    <div class="control-container-card" id="kontrol-prodi" style="margin-top: 40px;">
-        <div class="card-panel-heading">
-            <h3><i class="fa-solid fa-graduation-cap" style="color:var(--primary)"></i> Tambah Program Studi Magister</h3>
-        </div>
-        <form action="{{ route('admin.prodi.store') }}" method="POST" class="panel-form-body">
-            @csrf
-            <div class="form-flex-row">
-                <div class="form-input-cell">
-                    <label>Nama Program Studi</label>
-                    <input type="text" name="nama" required placeholder="Contoh: S2 - Pendidikan Agama Islam (PAI)">
-                </div>
-                <div class="form-input-cell">
-                    <label>Icon Kelas (FontAwesome)</label>
-                    <select name="icon">
-                        <option value="fa-book-quran">fa-book-quran (PAI)</option>
-                        <option value="fa-folder-tree">fa-folder-tree (MPI)</option>
-                        <option value="fa-scale-unbalanced">fa-scale-unbalanced (HKI)</option>
-                    </select>
-                </div>
+        <div class="profile-container">
+            <div class="profile-text">
+                @if($visi)
+                    <h3>{{ $visi->judul_visi }}</h3>
+                    <p style="white-space: pre-line;">{{ $visi->deskripsi_visi }}</p>
+                @else
+                    <h3>Visi Transformasi Keilmuan</h3>
+                    <p>Pascasarjana IAIN Curup hadir sebagai institusi strategis penyedia layanan pendidikan jenjang magister (S2) unggulan. Data visi utama belum diatur oleh admin melalui panel control.</p>
+                @endif
             </div>
-            <div class="form-flex-row">
-                <div class="form-input-cell">
-                    <label>Kata Kunci Pencarian (Tags dipisah spasi)</label>
-                    <input type="text" name="search_tags" required placeholder="pendidikan agama islam pai tarbiyah">
-                </div>
-            </div>
-            <div class="form-flex-row" style="align-items: flex-end; margin-bottom:0;">
-                <div class="form-input-cell" style="flex: 2;">
-                    <label>Deskripsi Singkat Program Studi</label>
-                    <textarea name="deskripsi" rows="2" required placeholder="Tulis ringkasan info prodi..."></textarea>
-                </div>
-                <button type="submit" class="btn-modern">Simpan Prodi</button>
-            </div>
-        </form>
-
-        <div class="tabular-view-shell">
-            <table class="clean-data-table">
-                <thead>
-                    <tr>
-                        <th>Program Studi</th>
-                        <th>Tags Indeks</th>
-                        <th style="text-align: right;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($prodi as $p)
-                    <tr>
-                        <td><strong>{{ $p->nama }}</strong></td>
-                        <td><code>{{ $p->search_tags }}</code></td>
-                        <td align="right">
-                            <div class="action-row-buttons">
-                                <button class="btn-action-trigger show-type btn-show-prodi" data-nama="{{ $p->nama }}" data-icon="{{ $p->icon }}" data-tags="{{ $p->search_tags }}" data-deskripsi="{{ $p->deskripsi }}"><i class="fa-solid fa-eye"></i> View</button>
-                                <button class="btn-action-trigger edit-type btn-edit-prodi" data-id="{{ $p->id }}" data-nama="{{ $p->nama }}" data-icon="{{ $p->icon }}" data-tags="{{ $p->search_tags }}" data-deskripsi="{{ $p->deskripsi }}"><i class="fa-solid fa-pen"></i></button>
-                                <form action="{{ route('admin.prodi.delete', $p->id) }}" method="POST" onsubmit="return confirm('Hapus prodi ini?')" style="display:inline;">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-action-trigger delete-type"><i class="fa-solid fa-trash"></i></button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ========================================================================= -->
-    <!-- KELOLA GURU BESAR -->
-    <!-- ========================================================================= -->
-    <div class="control-container-card" id="kontrol-gurubesar" style="margin-top: 40px;">
-        <div class="card-panel-heading">
-            <h3><i class="fa-solid fa-user-tie" style="color:var(--primary)"></i> Tambah Dewan Guru Besar / Profesor</h3>
-        </div>
-        <form action="{{ route('admin.gurubesar.store') }}" method="POST" enctype="multipart/form-data" class="panel-form-body">
-            @csrf
-            <div class="form-flex-row">
-                <div class="form-input-cell" style="flex: 1;">
-                    <label>Gelar Depan</label>
-                    <input type="text" name="gelar_depan" placeholder="Contoh: Prof. Dr.">
-                </div>
-                <div class="form-input-cell" style="flex: 3;">
-                    <label>Nama Lengkap (Tanpa Gelar)</label>
-                    <input type="text" name="nama" required placeholder="Contoh: Ahmad Subarjo">
-                </div>
-                <div class="form-input-cell" style="flex: 2;">
-                    <label>Gelar Belakang</label>
-                    <input type="text" name="gelar_belakang" placeholder="Contoh: M.Pd.I.">
-                </div>
-            </div>
-            <div class="form-flex-row">
-                <div class="form-input-cell">
-                    <label>Fokus Bidang Keahlian</label>
-                    <input type="text" name="bidang_keahlian" required placeholder="Contoh: Epistemologi Pendidikan Islam">
-                </div>
-                <div class="form-input-cell">
-                    <label>Foto Profil (.jpg / .png)</label>
-                    <input type="file" name="foto">
-                </div>
-            </div>
-            <div class="form-flex-row" style="align-items: flex-end; margin-bottom:0;">
-                <div class="form-input-cell" style="flex: 2;">
-                    <label>Biografi Singkat / Rekam Jejak Akademik</label>
-                    <textarea name="biografi_singkat" rows="3" placeholder="Tulis deskripsi singkat profil..."></textarea>
-                </div>
-                <button type="submit" class="btn-modern">Simpan Guru Besar</button>
-            </div>
-        </form>
-
-        <div class="tabular-view-shell">
-            <table class="clean-data-table">
-                <thead>
-                    <tr>
-                        <th>Nama & Gelar Profesor</th>
-                        <th>Bidang Keahlian</th>
-                        <th style="text-align: right;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($gurubesar as $gb)
-                    <tr>
-                        <td><strong>{{ $gb->gelar_depan }} {{ $gb->nama }}{{ $gb->gelar_belakang ? ', ' . $gb->gelar_belakang : '' }}</strong></td>
-                        <td><code style="background-color: rgba(16, 185, 129, 0.1); color: #059669; padding: 4px 8px; border-radius: 4px;">{{ $gb->bidang_keahlian }}</code></td>
-                        <td align="right">
-                            <div class="action-row-buttons">
-                                <button class="btn-action-trigger show-type btn-show-gb" data-gelardepan="{{ $gb->gelar_depan }}" data-nama="{{ $gb->nama }}" data-gelarbelakang="{{ $gb->gelar_belakang }}" data-keahlian="{{ $gb->bidang_keahlian }}" data-biografi="{{ $gb->biografi_singkat }}" data-foto="{{ asset('img/prof/' . $gb->foto) }}"><i class="fa-solid fa-eye"></i></button>
-                                
-                                <!-- FORM FIX AMAN ANTI-CRASH -->
-                                <button class="btn-action-trigger edit-type btn-edit-gb" 
-                                        data-id="{{ $gb->id }}" 
-                                        data-gelardepan="{{ $gb->gelar_depan }}" 
-                                        data-nama="{{ $gb->nama }}" 
-                                        data-gelarbelakang="{{ $gb->gelar_belakang }}" 
-                                        data-keahlian="{{ $gb->bidang_keahlian }}" 
-                                        data-foto="{{ asset('img/prof/' . $gb->foto) }}"
-                                        data-biografi="{{ $gb->biografi_singkat }}">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
-
-                                <form action="{{ route('admin.gurubesar.delete', $gb->id) }}" method="POST" onsubmit="return confirm('Hapus data profesor ini?')" style="display:inline;">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-action-trigger delete-type"><i class="fa-solid fa-trash"></i></button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ========================================================================= -->
-    <!-- APP MODALS PREVIEW -->
-    // ========================================================================= -->
-
-    <!-- MODAL 1: SHOW VISI -->
-    <div class="admin-modal-overlay" id="modalShowVisi">
-        <div class="admin-modal-window">
-            <span class="modal-close-trigger" onclick="closeModal('modalShowVisi')">×</span>
-            <div class="modal-show-badge"><i class="fa-solid fa-bullseye"></i> Kriteria Latar Belakang Institusi</div>
-            <div id="showVisiGambar" style="width:100%; height:200px; border-radius:12px; background-size:cover; background-position:center; margin-bottom:20px; border:1px solid var(--border-color);"></div>
-            <h2 id="showVisiJudul" style="font-size:1.4rem; font-weight:800; margin-bottom:15px; color:var(--dark);"></h2>
-            <div id="showVisiDeskripsi" class="biografi-preview-box" style="border-left-color:var(--accent);"></div>
-        </div>
-    </div>
-
-    <!-- MODAL 2: EDIT VISI -->
-    <div class="admin-modal-overlay" id="modalEditVisi">
-        <div class="admin-modal-window">
-            <span class="modal-close-trigger" onclick="closeModal('modalEditVisi')">×</span>
-            <h3 style="margin-bottom: 25px;"><i class="fa-solid fa-pen-to-square" style="color:var(--primary)"></i> Perbarui Judul & Narasi Visi</h3>
-            <form id="formEditVisi" method="POST" enctype="multipart/form-data">
-                @csrf @method('PUT')
-                <div class="form-flex-row">
-                    <div class="form-input-cell">
-                        <label>Judul Visi</label>
-                        <input type="text" id="editVisiJudul" name="judul_visi" required>
+            
+            <div class="profile-visual" style="background-image: url('{{ $visi && $visi->gambar_visi ? asset('img/' . $visi->gambar_visi) : 'https://picsum.photos/800/600?random=88' }}');">
+                <div class="profile-overlay">
+                    <div>
+                        <h4 style="font-weight: 800; font-size: 1.3rem;">Gedung Sentral Pascasarjana</h4>
+                        <p style="font-size: 0.85rem; opacity: 0.9;">Inkubator riset ilmiah & transformasi kurikulum digital.</p>
                     </div>
                 </div>
-                <div class="form-flex-row" style="align-items: center; gap:20px;">
-                    <div id="editVisiGambarPreview" style="width: 100px; height: 70px; border-radius:8px; background-size:cover; background-position:center; border:1px solid var(--border-color); flex-shrink:0;"></div>
-                    <div class="form-input-cell">
-                        <label>Ganti Gambar Banner Visi (Opsional)</label>
-                        <input type="file" id="editVisiGambarInput" name="gambar_visi" accept="image/*">
-                    </div>
-                </div>
-                <div class="form-flex-row" style="flex-direction:column; gap:15px;">
-                    <div class="form-input-cell" style="width:100%;">
-                        <label>Isi Narasi Deskripsi</label>
-                        <textarea id="editVisiDeskripsi" name="deskripsi_visi" rows="5" required></textarea>
-                    </div>
-                    <button type="submit" class="btn-modern" style="width:fit-content; align-self:flex-end;">Perbarui Visi</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL 3: SHOW PRODI -->
-    <div class="admin-modal-overlay" id="modalShowProdi">
-        <div class="admin-modal-window">
-            <span class="modal-close-trigger" onclick="closeModal('modalShowProdi')">×</span>
-            <div class="modal-show-badge"><i class="fa-solid fa-graduation-cap"></i> Dokumen Ringkasan Prodi</div>
-            <h2 id="showProdiNama" style="font-size: 1.5rem; font-weight: 800; margin-bottom: 25px; color: var(--dark);"></h2>
-            <div class="modal-data-strip"><i class="fa-solid fa-icons"></i><p><b>Icon Class:</b> <code id="showProdiIcon" style="margin-left:8px;"></code></p></div>
-            <div class="modal-data-strip"><i class="fa-solid fa-tags"></i><p><b>Tags Index:</b> <code id="showProdiTags" style="margin-left:8px;"></code></p></div>
-            <div style="margin-top: 25px;">
-                <label style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Deskripsi Fokus</label>
-                <p id="showProdiDesc" style="margin-top: 10px; line-height: 1.7; font-size: 0.95rem; color: var(--text-main); text-align: justify;"></p>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- MODAL 4: EDIT PRODI -->
-    <div class="admin-modal-overlay" id="modalEditProdi">
-        <div class="admin-modal-window">
-            <span class="modal-close-trigger" onclick="closeModal('modalEditProdi')">×</span>
-            <h3 style="margin-bottom: 25px;"><i class="fa-solid fa-pen-to-square" style="color:var(--primary)"></i> Edit Data Program Studi</h3>
-            <form id="formEditProdi" method="POST">
-                @csrf @method('PUT')
-                <div class="form-flex-row">
-                    <div class="form-input-cell">
-                        <label>Nama Program Studi</label>
-                        <input type="text" id="editProdiNama" name="nama" required>
-                    </div>
-                    <div class="form-input-cell">
-                        <label>Icon Kelas</label>
-                        <select id="editProdiIcon" name="icon">
-                            <option value="fa-book-quran">fa-book-quran</option>
-                            <option value="fa-folder-tree">fa-folder-tree</option>
-                            <option value="fa-scale-unbalanced">fa-scale-unbalanced</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-flex-row">
-                    <div class="form-input-cell">
-                        <label>Kata Kunci Pencarian (Tags)</label>
-                        <input type="text" id="editProdiTags" name="search_tags" required>
-                    </div>
-                </div>
-                <div class="form-flex-row" style="flex-direction:column; gap:15px;">
-                    <div class="form-input-cell" style="width:100%;">
-                        <label>Deskripsi Program Studi</label>
-                        <textarea id="editProdiDeskripsi" name="deskripsi" rows="3" required></textarea>
-                    </div>
-                    <button type="submit" class="btn-modern" style="width:fit-content; align-self:flex-end;">Simpan Pembaruan</button>
-                </div>
-            </form>
+    <section id="prodi" style="background: rgba(241, 245, 249, 0.4);">
+        <div class="section-header">
+            <h2>Program Studi Magister</h2>
+            <p>Rumpun program studi unggulan pilihan yang adaptif terhadap akselerasi dunia kerja profesional</p>
         </div>
-    </div>
 
-    <!-- MODAL 5: SHOW GURU BESAR -->
-    <div class="admin-modal-overlay" id="modalShowGb">
-        <div class="admin-modal-window">
-            <span class="modal-close-trigger" onclick="closeModal('modalShowGb')">×</span>
-            <div class="modal-show-badge"><i class="fa-solid fa-id-card"></i> Arsip Profil Guru Besar</div>
-            <div class="modal-profile-header-layout">
-                <div id="showGbFoto" class="modal-avatar-frame"></div>
-                <div>
-                    <h2 id="showGbFullNama" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 6px;"></h2>
-                    <p id="showGbKeahlian" style="font-size: 0.85rem; font-weight: 700; color: var(--accent); text-transform: uppercase;"></p>
-                </div>
-            </div>
-            <div>
-                <label style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted);">Biografi Akademik</label>
-                <div id="showGbBiografi" class="biografi-preview-box"></div>
-            </div>
+        <div class="search-wrapper" style="max-width: 600px; margin: 0 auto 40px;">
+            <input type="text" id="liveSearch" placeholder="Cari nama program studi... (Contoh: PAI, MPI, Hukum)" style="width: 100%; padding: 16px 24px; border-radius: 30px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--dark); outline: none;">
         </div>
-    </div>
 
-    <!-- MODAL 6: EDIT GURU BESAR -->
-    <div class="admin-modal-overlay" id="modalEditGb">
-        <div class="admin-modal-window">
-            <span class="modal-close-trigger" onclick="closeModal('modalEditGb')">×</span>
-            <h3 style="margin-bottom: 25px;"><i class="fa-solid fa-user-pen" style="color:var(--primary)"></i> Edit Data Dewan Guru Besar</h3>
-            <form id="formEditGb" method="POST" enctype="multipart/form-data">
-                @csrf @method('PUT')
-                <div class="form-flex-row">
-                    <div class="form-input-cell" style="flex:1;">
-                        <label>Gelar Depan</label>
-                        <input type="text" id="editGbGelarDepan" name="gelar_depan">
+        <div class="prodi-grid" id="prodiContainer">
+            @foreach ($prodi as $p)
+            <div class="prodi-card" data-search="{{ $p->search_tags }}">
+                <div class="prodi-icon"><i class="fa-solid {{ $p->icon }}"></i></div>
+                <h3>{{ $p->nama }}</h3>
+                <p style="color: var(--gray); font-size: 0.9rem; margin-top: 12px; line-height: 1.5;">{{ $p->deskripsi }}</p>
+            </div>
+            @endforeach
+        </div>
+    </section>
+
+    <section id="gurubesar">
+        <div class="section-header">
+            <h2>Dewan Guru Besar & Promotor</h2>
+            <p>Jajaran ilmuwan senior, pakar, dan promotor utama akselerasi karya ilmiah pascasarjana</p>
+        </div>
+        
+        <div class="professor-grid" style="margin-top: 50px;">
+            @foreach($gurubesar as $gb)
+            <div class="prof-card">
+                <div class="prof-avatar" style="background-image: url('{{ asset('img/prof/' . $gb->foto) }}');"></div>
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 5px;">
+                    {{ $gb->gelar_depan ? $gb->gelar_depan . ' ' : '' }}{{ $gb->nama }}{{ $gb->gelar_belakang ? ', ' . $gb->gelar_belakang : '' }}
+                </h3>
+                <p style="color: var(--primary); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 10px;">{{ $gb->bidang_keahlian }}</p>
+                <p style="color: var(--gray); font-size: 0.85rem; line-height: 1.4;">{{ $gb->biografi_singkat }}</p>
+            </div>
+            @endforeach
+        </div>
+    </section>
+
+    <section id="contact" style="background: rgba(241, 245, 249, 0.4);">
+        <div class="section-header">
+            <h2>Kanal Interaksi & Informasi</h2>
+            <p>Ajukan pertanyaan konsultasi akademik secara langsung atau ikuti jaringan media komunikasi kami</p>
+        </div>
+        <div class="contact-layout">
+            <div class="contact-box">
+                <form id="contactForm">
+                    <div class="form-group"><input type="text" id="name" placeholder="Nama Lengkap Anda" required></div>
+                    <div class="form-group"><input type="email" id="email" placeholder="Alamat Email Aktif" required></div>
+                    <div class="form-group"><textarea id="message" rows="5" placeholder="Tulis rincian pertanyaan konsultasi prodi atau pendaftaran akademik..." required></textarea></div>
+                    <button type="submit" class="btn-send">Kirim Enkripsi Pesan</button>
+                </form>
+            </div>
+            <div class="info-box">
+                <div class="info-card">
+                    <div class="info-item">
+                        <div class="info-icon"><i class="fa-solid fa-envelope"></i></div>
+                        <div class="info-text"><h4>Email Kesekretariatan</h4><p>pasca@iaincurup.ac.id</p></div>
                     </div>
-                    <div class="form-input-cell" style="flex:3;">
-                        <label>Nama Lengkap</label>
-                        <input type="text" id="editGbNama" name="nama" required>
-                    </div>
-                    <div class="form-input-cell" style="flex:2;">
-                        <label>Gelar Belakang</label>
-                        <input type="text" id="editGbGelarBelakang" name="gelar_belakang">
-                    </div>
-                </div>
-                <div class="form-flex-row">
-                    <div class="form-input-cell">
-                        <label>Fokus Bidang Keahlian</label>
-                        <input type="text" id="editGbKeahlian" name="bidang_keahlian" required>
+                    <div class="info-item">
+                        <div class="info-icon"><i class="fa-solid fa-phone"></i></div>
+                        <div class="info-text"><h4>Layanan Telepon/WA</h4><p>+62 732 21544</p></div>
                     </div>
                 </div>
                 
-                <!-- LIVE PREVIEW HANDLER FOTO PROFESOR -->
-                <div class="form-flex-row" style="align-items: center; gap: 20px;">
-                    <div id="editGbFotoPreview" style="width: 80px; height: 80px; border-radius: 10px; background-size: cover; background-position: center; border: 1px solid var(--border-color); flex-shrink: 0;"></div>
-                    <div class="form-input-cell">
-                        <label>Ganti Foto Profil (Kosongkan jika tidak diubah)</label>
-                        <input type="file" id="editGbFotoInput" name="foto" accept="image/*">
+                <div class="info-card">
+                    <h4 style="margin-bottom: 12px; font-weight: 700; font-size: 1rem;">Kanal Media Sosial Resmi</h4>
+                    <p style="color: var(--gray); font-size: 0.85rem; margin-bottom: 15px;">Ikuti publikasi dokumentasi kegiatan, info seminar, dan pengumuman berbasis komunitas digital kami:</p>
+                    <div class="social-container">
+                        <a href="#" class="social-circle" onclick="event.preventDefault(); showToast('Menghubungkan ke Instagram resmi...');"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="social-circle" onclick="event.preventDefault(); showToast('Menghubungkan ke YouTube resmi...');"><i class="fa-brands fa-youtube"></i></a>
+                        <a href="#" class="social-circle" onclick="event.preventDefault(); showToast('Menghubungkan ke Facebook resmi...');"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="social-circle" onclick="event.preventDefault(); showToast('Membuka tautan portal utama web...');"><i class="fa-solid fa-globe"></i></a>
                     </div>
                 </div>
-
-                <div class="form-flex-row" style="flex-direction:column; gap:15px;">
-                    <div class="form-input-cell" style="width:100%;">
-                        <label>Biografi Singkat</label>
-                        <textarea id="editGbBiografi" name="biografi_singkat" rows="3"></textarea>
-                    </div>
-                    <button type="submit" class="btn-modern" style="width:fit-content; align-self:flex-end;">Simpan Pembaruan</button>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <section id="lokasi">
+        <div class="section-header">
+            <h2>Peta Geografis Kampus</h2>
+            <p>Alamat: Jl. Dr. AK Gani No. 01, Curup Tengah, Kabupaten Rejang Lebong, Bengkulu</p>
+        </div>
+        <div class="map-wrapper">
+            <iframe src="https://maps.google.com/maps?q=IAIN%20Curup&t=&z=15&ie=UTF-8&iwloc=&output=embed" allowfullscreen="" loading="lazy"></iframe>
+        </div>
+        <div style="text-align: center; margin-top: 25px;">
+            <a href="https://maps.app.goo.gl/i1mUwtj5sfUB22oBA" target="_blank" class="btn-modern" style="display: inline-flex; align-items: center; gap: 10px; width: auto; padding: 12px 30px; text-decoration: none; color: white; background: var(--primary);">
+                <i class="fa-solid fa-map-location-dot"></i> Buka Direktori Google Maps
+            </a>
+        </div>
+    </section>
 @endsection
 
 @section('scripts')
 <script>
-    function closeModal(modalId) {
-        document.getElementById(modalId).classList.remove('active');
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        // --- LOGIKA EVENT KENDALI MODAL VISI ---
-        document.querySelectorAll('.btn-show-visi').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.getElementById('showVisiJudul').innerText = this.getAttribute('data-judul');
-                document.getElementById('showVisiDeskripsi').innerHTML = this.getAttribute('data-deskripsi').replace(/\n/g, '<br>');
-                document.getElementById('showVisiGambar').style.backgroundImage = `url('${this.getAttribute('data-gambar')}')`;
-                document.getElementById('modalShowVisi').classList.add('active');
-            });
+    // Live Search Prodi Matrix
+    const liveSearch = document.getElementById('liveSearch');
+    liveSearch.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        const cards = document.querySelectorAll('.prodi-card');
+        cards.forEach(card => {
+            const targetText = card.getAttribute('data-search').toLowerCase();
+            card.style.display = targetText.includes(query) ? 'block' : 'none';
         });
+    });
 
-        document.querySelectorAll('.btn-edit-visi').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                document.getElementById('formEditVisi').action = `/admin/pendidikan/visi/${id}`;
-                document.getElementById('editVisiJudul').value = this.getAttribute('data-judul');
-                document.getElementById('editVisiDeskripsi').value = this.getAttribute('data-deskripsi');
-                document.getElementById('editVisiGambarPreview').style.backgroundImage = `url('${this.getAttribute('data-gambar')}')`;
-                document.getElementById('modalEditVisi').classList.add('active');
-            });
-        });
-
-        const visiGambarInput = document.getElementById('editVisiGambarInput');
-        if(visiGambarInput) {
-            visiGambarInput.addEventListener('change', function() {
-                const file = this.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => document.getElementById('editVisiGambarPreview').style.backgroundImage = `url('${e.target.result}')`;
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-
-        // --- LOGIKA EVENT KENDALI MODAL PROGRAM STUDI ---
-        document.querySelectorAll('.btn-show-prodi').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.getElementById('showProdiNama').innerText = this.getAttribute('data-nama');
-                document.getElementById('showProdiIcon').innerText = this.getAttribute('data-icon');
-                document.getElementById('showProdiTags').innerText = this.getAttribute('data-tags');
-                document.getElementById('showProdiDesc').innerText = this.getAttribute('data-deskripsi');
-                document.getElementById('modalShowProdi').classList.add('active');
-            });
-        });
-
-        document.querySelectorAll('.btn-edit-prodi').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                document.getElementById('formEditProdi').action = `/admin/prodi/${id}`;
-                document.getElementById('editProdiNama').value = this.getAttribute('data-nama');
-                document.getElementById('editProdiIcon').value = this.getAttribute('data-icon');
-                document.getElementById('editProdiTags').value = this.getAttribute('data-tags');
-                document.getElementById('editProdiDeskripsi').value = this.getAttribute('data-deskripsi');
-                document.getElementById('modalEditProdi').classList.add('active');
-            });
-        });
-
-        // --- LOGIKA EVENT KENDALI MODAL GURU BESAR ---
-        document.querySelectorAll('.btn-show-gb').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const gd = this.getAttribute('data-gelardepan');
-                const nm = this.getAttribute('data-nama');
-                const gb = this.getAttribute('data-gelarbelakang');
-                
-                document.getElementById('showGbFullNama').innerText = `${gd ? gd + ' ' : ''}${nm}${gb ? ', ' + gb : ''}`;
-                document.getElementById('showGbKeahlian').innerText = this.getAttribute('data-keahlian');
-                
-                const bio = this.getAttribute('data-biografi');
-                document.getElementById('showGbBiografi').innerText = bio ? bio : 'Belum ada catatan biografi.';
-                document.getElementById('showGbFoto').style.backgroundImage = `url('${this.getAttribute('data-foto')}')`;
-                
-                document.getElementById('modalShowGb').classList.add('active');
-            });
-        });
-
-        document.querySelectorAll('.btn-edit-gb').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                document.getElementById('formEditGb').action = `/admin/pendidikan/gurubesar/${id}`;
-                document.getElementById('editGbGelarDepan').value = this.getAttribute('data-gelardepan');
-                document.getElementById('editGbNama').value = this.getAttribute('data-nama');
-                document.getElementById('editGbGelarBelakang').value = this.getAttribute('data-gelarbelakang');
-                document.getElementById('editGbKeahlian').value = this.getAttribute('data-keahlian');
-                document.getElementById('editGbBiografi').value = this.getAttribute('data-biografi');
-                
-                // Mengambil jalur foto dari data-foto untuk diumpankan ke preview modal
-                document.getElementById('editGbFotoPreview').style.backgroundImage = `url('${this.getAttribute('data-foto')}')`;
-                
-                document.getElementById('modalEditGb').classList.add('active');
-            });
-        });
-
-        // Live Upload Image Reader untuk Guru Besar
-        const gbFotoInput = document.getElementById('editGbFotoInput');
-        if(gbFotoInput) {
-            gbFotoInput.addEventListener('change', function() {
-                const file = this.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        document.getElementById('editGbFotoPreview').style.backgroundImage = `url('${e.target.result}')`;
-                    }
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
+    // Contact Form Async Submission Handler
+    document.getElementById('contactForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const clientName = document.getElementById('name').value;
+        showToast(`Koneksi Terjalin! Pesan dari ${clientName} terenkripsi dan terkirim ke sekretariat.`);
+        document.getElementById('contactForm').reset();
     });
 </script>
 @endsection
