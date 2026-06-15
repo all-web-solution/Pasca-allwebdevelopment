@@ -40,7 +40,28 @@ class AdminController extends Controller
         $penat = Penelitian::latest()->get();
         $seminars = Seminar::latest()->get();
 
-        return view('admin.arsip', compact('sliders', 'dokumens', 'alumnis', 'penat', 'seminars'));
+        // Load file pengaturan jika ada
+        $settings = [];
+        if (File::exists(storage_path('app/settings.json'))) {
+            $settings = json_decode(File::get(storage_path('app/settings.json')), true);
+        }
+
+        return view('admin.arsip', compact('sliders', 'dokumens', 'alumnis', 'penat', 'seminars', 'settings'));
+    }
+    public function updatePengaturan(Request $request)
+    {
+        $data = $request->validate([
+            'stat_alumni_total' => 'required|numeric',
+            'stat_alumni_kerja' => 'required|numeric',
+            'stat_alumni_mitra' => 'required|numeric',
+            'alumni_section_title' => 'required|string|max:255',
+            'alumni_section_desc' => 'required|string',
+        ]);
+
+        // Simpan data parameter ke dalam file JSON
+        File::put(storage_path('app/settings.json'), json_encode($data));
+
+        return back()->with('success', 'Parameter statistik dan deskripsi global berhasil diperbarui.');
     }
 
     // =========================================================================

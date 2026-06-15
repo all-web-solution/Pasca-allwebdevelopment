@@ -52,13 +52,20 @@ class PublicController extends Controller
     // =========================================================================
     // HALAMAN SUB-MENU JARINGAN ALUMNI
     // =========================================================================
+
     public function alumni()
     {
         $sliders = HeroSlider::all();
         $alumni = Alumni::latest()->get();
-        return view('public.alumni', compact('sliders', 'alumni'));
-    }
 
+        // Tarik data pengaturan dinamis dari JSON
+        $settings = [];
+        if (File::exists(storage_path('app/settings.json'))) {
+            $settings = json_decode(File::get(storage_path('app/settings.json')), true);
+        }
+
+        return view('public.alumni', compact('sliders', 'alumni', 'settings'));
+    }
     // =========================================================================
     // HALAMAN REPOSITORI UNDUHAN DOKUMEN RESMI
     // =========================================================================

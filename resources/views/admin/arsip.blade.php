@@ -35,7 +35,13 @@
     .modal-data-strip i { color: var(--primary); }
     
     .panel-section-divider { margin: 40px 0; border: 0; border-top: 1px dashed var(--border-color); }
-    .action-row-buttons { display: flex; gap: 6px; justify-content: flex-end; }
+    
+    /* --- ACTION BUTTONS PLATFORM --- */
+    .btn-action-trigger.edit-type { color: #D97706; }
+    .btn-action-trigger.edit-type:hover { background: #D97706; color: white; border-color: #D97706; }
+    .btn-action-trigger.show-type { color: #3B82F6; }
+    .btn-action-trigger.show-type:hover { background: #3B82F6; color: white; border-color: #3B82F6; }
+    .action-row-buttons { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
 </style>
 @endsection
 
@@ -44,6 +50,7 @@
         <script>window.addEventListener('load', () => showToast("{{ session('success') }}"))</script>
     @endif
 
+    <!-- PENGATURAN PARAMETER GLOBAL -->
     <div class="control-container-card" id="kontrol-parameter">
         <div class="card-panel-heading">
             <h3><i class="fa-solid fa-sliders" style="color:var(--primary)"></i> Pengaturan Parameter & Angka Statistik Global</h3>
@@ -82,6 +89,7 @@
 
     <hr class="panel-section-divider">
 
+    <!-- MANAJEMEN BANNER HERO SLIDER -->
     <div class="control-container-card" id="kontrol-slider">
         <div class="card-panel-heading">
             <h3><i class="fa-solid fa-images" style="color:var(--primary)"></i> Tambah Banner Hero Slider</h3>
@@ -136,6 +144,18 @@
                         <td align="right">
                             <div class="action-row-buttons">
                                 <button class="btn-action-trigger show-type btn-show-slider" data-title="{{ $s->title }}" data-badge="{{ $s->badge_text }}" data-subtitle="{{ $s->subtitle }}" data-link="{{ $s->link_url }}" data-image="{{ asset('uploads/slider/' . $s->image) }}"><i class="fa-solid fa-eye"></i></button>
+                                
+                                <!-- TOMBOL EDIT SLIDER KEBAL CRASH -->
+                                <button class="btn-action-trigger edit-type btn-edit-slider" 
+                                        data-id="{{ $s->id }}" 
+                                        data-title="{{ $s->title }}" 
+                                        data-badge="{{ $s->badge_text }}" 
+                                        data-link="{{ $s->link_url }}" 
+                                        data-image="{{ asset('uploads/slider/' . $s->image) }}"
+                                        data-subtitle="{{ $s->subtitle }}">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+
                                 <form action="{{ route('admin.slider.delete', $s->id) }}" method="POST" onsubmit="return confirm('Hapus slide banner ini?')" style="display:inline;">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn-action-trigger delete-type"><i class="fa-solid fa-trash"></i></button>
@@ -151,6 +171,7 @@
 
     <hr class="panel-section-divider">
 
+    <!-- UPLOAD DOKUMEN AKADEMIK -->
     <div class="control-container-card" id="kontrol-dokumen">
         <div class="card-panel-heading">
             <h3><i class="fa-solid fa-file-arrow-up" style="color:var(--primary)"></i> Upload Berkas Dokumen Akademik</h3>
@@ -213,6 +234,7 @@
 
     <hr class="panel-section-divider">
 
+    <!-- REKAM DATA ALUMNI -->
     <div class="control-container-card" id="kontrol-alumni">
         <div class="card-panel-heading">
             <h3><i class="fa-solid fa-user-graduate" style="color:var(--primary)"></i> Input Rekam Data Alumni</h3>
@@ -282,6 +304,7 @@
 
     <hr class="panel-section-divider">
 
+    <!-- AGENDA SEMINAR -->
     <div class="control-container-card" id="kontrol-seminar">
         <div class="card-panel-heading">
             <h3><i class="fa-solid fa-calendar-days" style="color:var(--primary)"></i> Tambah Agenda Seminar & Kolokium</h3>
@@ -346,6 +369,7 @@
 
     <hr class="panel-section-divider">
 
+    <!-- ARSIP RISET PENELITIAN -->
     <div class="control-container-card" id="kontrol-penelitian">
         <div class="card-panel-heading">
             <h3><i class="fa-solid fa-book-bookmark" style="color:var(--primary)"></i> Input Publikasi Jurnal & Riset Penelitian</h3>
@@ -412,6 +436,7 @@
         </div>
     </div>
 
+    <!-- 1. MODAL VIEW BANNER SLIDER -->
     <div class="admin-modal-overlay" id="modalShowSlider">
         <div class="admin-modal-window">
             <span class="modal-close-trigger" onclick="closeModal('modalShowSlider')">&times;</span>
@@ -424,6 +449,48 @@
         </div>
     </div>
 
+    <!-- 2. MODAL EDIT BANNER SLIDER (BARU & LENGKAP) -->
+    <div class="admin-modal-overlay" id="modalEditSlider">
+        <div class="admin-modal-window">
+            <span class="modal-close-trigger" onclick="closeModal('modalEditSlider')">&times;</span>
+            <h3 style="margin-bottom: 25px;"><i class="fa-solid fa-pen-to-square" style="color:var(--primary)"></i> Perbarui Banner Hero Slider</h3>
+            <form id="formEditSlider" method="POST" enctype="multipart/form-data">
+                @csrf @method('PUT')
+                <div class="form-flex-row">
+                    <div class="form-input-cell">
+                        <label>Judul Utama Banner</label>
+                        <input type="text" id="editSliderTitle" name="title" required>
+                    </div>
+                    <div class="form-input-cell">
+                        <label>Label Badge Atas</label>
+                        <input type="text" id="editSliderBadge" name="badge_text">
+                    </div>
+                </div>
+                <div class="form-flex-row">
+                    <div class="form-input-cell">
+                        <label>Link URL Redirect Button</label>
+                        <input type="url" id="editSliderLink" name="link_url">
+                    </div>
+                </div>
+                <div class="form-flex-row" style="align-items: center; gap: 20px;">
+                    <div id="editSliderImagePreview" style="width: 100px; height: 75px; border-radius: 8px; background-size: cover; background-position: center; border: 1px solid var(--border-color); flex-shrink: 0;"></div>
+                    <div class="form-input-cell">
+                        <label>Ganti Gambar Slide Background (Opsional)</label>
+                        <input type="file" id="editSliderImageInput" name="image" accept="image/*">
+                    </div>
+                </div>
+                <div class="form-flex-row" style="flex-direction:column; gap:15px;">
+                    <div class="form-input-cell" style="width:100%;">
+                        <label>Sub-judul / Deskripsi Banner</label>
+                        <textarea id="editSliderSubtitle" name="subtitle" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn-modern" style="width:fit-content; align-self:flex-end;">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. MODAL VIEW ALUMNI -->
     <div class="admin-modal-overlay" id="modalShowAlumni">
         <div class="admin-modal-window">
             <span class="modal-close-trigger" onclick="closeModal('modalShowAlumni')">&times;</span>
@@ -449,7 +516,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        // --- LOGIKA PEMICU POPUP MODAL BANNER HERO SLIDER ---
+        // --- PREVIEW BANNER SLIDER ---
         document.querySelectorAll('.btn-show-slider').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.getElementById('vSliderTitle').innerText = this.getAttribute('data-title');
@@ -461,7 +528,34 @@
             });
         });
 
-        // --- LOGIKA PEMICU POPUP MODAL ARSIP DATA ALUMNI ---
+        // --- ENGINE EVENT EDIT SLIDER (ANTI-CRASH) ---
+        document.querySelectorAll('.btn-edit-slider').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                document.getElementById('formEditSlider').action = `/admin/slider/${id}`;
+                document.getElementById('editSliderTitle').value = this.getAttribute('data-title');
+                document.getElementById('editSliderBadge').value = this.getAttribute('data-badge');
+                document.getElementById('editSliderLink').value = this.getAttribute('data-link');
+                document.getElementById('editSliderSubtitle').value = this.getAttribute('data-subtitle');
+                document.getElementById('editSliderImagePreview').style.backgroundImage = `url('${this.getAttribute('data-image')}')`;
+                document.getElementById('modalEditSlider').classList.add('active');
+            });
+        });
+
+        // --- LIVE PREVIEW IMAGE READER UNTUK EDIT SLIDER ---
+        const imgInputSlider = document.getElementById('editSliderImageInput');
+        if(imgInputSlider) {
+            imgInputSlider.addEventListener('change', function() {
+                const file = this.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => document.getElementById('editSliderImagePreview').style.backgroundImage = `url('${e.target.result}')`;
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // --- PREVIEW DATA ALUMNI ---
         document.querySelectorAll('.btn-show-alumni').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.getElementById('vAlumniNama').innerText = this.getAttribute('data-nama');
