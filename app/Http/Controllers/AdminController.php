@@ -21,7 +21,6 @@ class AdminController extends Controller
     // =========================================================================
     public function index()
     {
-        // Mengambil semua data dari database untuk kalkulasi statistik di widget dashboard
         $prodi = ProgramStudi::all();
         $berita = Berita::latest()->get();
         $alumni = Alumni::all();
@@ -84,7 +83,7 @@ class AdminController extends Controller
 
         if ($request->hasFile('gambar_visi')) {
             $request->validate(['gambar_visi' => 'image|mimes:jpeg,png,jpg,webp|max:2048']);
-            if ($visi->gambar_visi) {
+            if ($visi->gambar_visi && File::exists(public_path('img/' . $visi->gambar_visi))) {
                 File::delete(public_path('img/' . $visi->gambar_visi));
             }
             $imageName = time() . '.' . $request->gambar_visi->extension();
@@ -99,7 +98,7 @@ class AdminController extends Controller
     public function destroyVisi($id)
     {
         $visi = VisiPendidikan::findOrFail($id);
-        if ($visi->gambar_visi) {
+        if ($visi->gambar_visi && File::exists(public_path('img/' . $visi->gambar_visi))) {
             File::delete(public_path('img/' . $visi->gambar_visi));
         }
         $visi->delete();
@@ -181,7 +180,7 @@ class AdminController extends Controller
 
         if ($request->hasFile('foto')) {
             $request->validate(['foto' => 'image|mimes:jpeg,png,jpg,webp|max:2048']);
-            if ($gb->foto && $gb->foto !== 'default-prof.png') {
+            if ($gb->foto && $gb->foto !== 'default-prof.png' && File::exists(public_path('img/prof/' . $gb->foto))) {
                 File::delete(public_path('img/prof/' . $gb->foto));
             }
             $imageName = time() . '.' . $request->foto->extension();
@@ -191,6 +190,17 @@ class AdminController extends Controller
 
         $gb->update($data);
         return back()->with('success', 'Data Guru Besar berhasil diperbarui.');
+    }
+
+    // METHOD FIX SINKRONISASI: Menghapus data Profesor secara permanen dari DB dan server
+    public function destroyGuruBesar($id)
+    {
+        $gb = GuruBesar::findOrFail($id);
+        if ($gb->foto && $gb->foto !== 'default-prof.png' && File::exists(public_path('img/prof/' . $gb->foto))) {
+            File::delete(public_path('img/prof/' . $gb->foto));
+        }
+        $gb->delete();
+        return back()->with('success', 'Data Guru Besar berhasil dihapus dari sistem.');
     }
 
     // =========================================================================
@@ -222,10 +232,36 @@ class AdminController extends Controller
         Berita::create($data);
         return back()->with('success', 'Berita baru berhasil diterbitkan.');
     }
+
+    public function updateBerita(Request $request, $id)
+    {
+        $data = $request->validate([
+            'judul'    => 'required|string|max:255',
+            'kategori' => 'required|string',
+            'konten'   => 'required|string',
+        ]);
+
+        $berita = Berita::findOrFail($id);
+
+        if ($request->hasFile('cover')) {
+            $request->validate(['cover' => 'image|mimes:jpeg,png,jpg,webp|max:2048']);
+            if ($berita->cover && $berita->cover !== 'news1.jpeg' && $berita->cover !== 'news2.jpeg' && File::exists(public_path('img/' . $berita->cover))) {
+                File::delete(public_path('img/' . $berita->cover));
+            }
+
+            $imageName = time() . '.' . $request->cover->extension();
+            $request->cover->move(public_path('img'), $imageName);
+            $data['cover'] = $imageName;
+        }
+
+        $berita->update($data);
+        return back()->with('success', 'Artikel berita berhasil diperbarui dan disinkronkan.');
+    }
+
     public function destroyBerita($id)
     {
         $berita = Berita::findOrFail($id);
-        if ($berita->cover && $berita->cover !== 'news1.jpeg') {
+        if ($berita->cover && $berita->cover !== 'news1.jpeg' && File::exists(public_path('img/' . $berita->cover))) {
             File::delete(public_path('img/' . $berita->cover));
         }
         $berita->delete();
@@ -261,10 +297,43 @@ class AdminController extends Controller
         return back()->with('success', 'Banner Slide utama berhasil ditambahkan.');
     }
 
+    public function updateSlider(Request $request, $id)
+    {
+        $request->validate([
+            'title'      => 'required|string|max:255',
+            'badge_text' => 'nullable|string|max:50',
+            'subtitle'   => 'nullable|string',
+            'image'      => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'link_url'   => 'nullable|url'
+        ]);
+
+        $slider = HeroSlider::findOrFail($id);
+
+        $slider->title = $request->title;
+        $slider->badge_text = $request->badge_text;
+        $slider->subtitle = $request->subtitle;
+        $slider->link_url = $request->link_url;
+
+        if ($request->hasFile('image')) {
+            if ($slider->image && File::exists(public_path('uploads/slider/' . $slider->image))) {
+                File::delete(public_path('uploads/slider/' . $slider->image));
+            }
+
+            $imgName = 'slider_' . time() . '.' . $request->image->extension();
+            $request->image->move(public_path('uploads/slider'), $imgName);
+            $slider->image = $imgName;
+        }
+
+        $slider->save();
+        return back()->with('success', 'Banner Hero Slider berhasil diperbarui.');
+    }
+
     public function destroySlider($id)
     {
         $slider = HeroSlider::findOrFail($id);
-        File::delete(public_path('uploads/slider/' . $slider->image));
+        if ($slider->image && File::exists(public_path('uploads/slider/' . $slider->image))) {
+            File::delete(public_path('uploads/slider/' . $slider->image));
+        }
         $slider->delete();
 
         return back()->with('success', 'Banner Slide berhasil dihapus.');
@@ -306,7 +375,7 @@ class AdminController extends Controller
 
         if ($request->hasFile('foto')) {
             $request->validate(['foto' => 'image|mimes:jpeg,png,jpg|max:1024']);
-            if ($alumni->foto) {
+            if ($alumni->foto && File::exists(public_path('uploads/alumni/' . $alumni->foto))) {
                 File::delete(public_path('uploads/alumni/' . $alumni->foto));
             }
             $fotoName = 'alumni_' . time() . '.' . $request->foto->extension();
@@ -321,7 +390,7 @@ class AdminController extends Controller
     public function destroyAlumni($id)
     {
         $alumni = Alumni::findOrFail($id);
-        if ($alumni->foto) {
+        if ($alumni->foto && File::exists(public_path('uploads/alumni/' . $alumni->foto))) {
             File::delete(public_path('uploads/alumni/' . $alumni->foto));
         }
         $alumni->delete();
@@ -342,7 +411,6 @@ class AdminController extends Controller
 
         if ($request->hasFile('file_berkas')) {
             $file = $request->file_berkas;
-
             $cleanOriginalName = preg_replace('/[^a-zA-Z0-9_.-]/', '_', $file->getClientOriginalName());
             $fileName = 'doc_' . time() . '_' . $cleanOriginalName;
 
@@ -361,7 +429,9 @@ class AdminController extends Controller
     public function destroyDokumen($id)
     {
         $doc = Dokumen::findOrFail($id);
-        File::delete(public_path('uploads/dokumen/' . $doc->file_path));
+        if (File::exists(public_path('uploads/dokumen/' . $doc->file_path))) {
+            File::delete(public_path('uploads/dokumen/' . $doc->file_path));
+        }
         $doc->delete();
 
         return back()->with('success', 'Berkas dokumen telah berhasil dihapus.');
@@ -410,34 +480,5 @@ class AdminController extends Controller
     {
         Seminar::findOrFail($id)->delete();
         return back()->with('success', 'Agenda seminar berhasil dihapus.');
-    }
-    public function updateBerita(Request $request, $id)
-    {
-        $data = $request->validate([
-            'judul'    => 'required|string|max:255',
-            'kategori' => 'required|string',
-            'konten'   => 'required|string',
-        ]);
-
-        $berita = Berita::findOrFail($id);
-
-        // Logika enkripsi penggantian file cover gambar baru jika diupload
-        if ($request->hasFile('cover')) {
-            $request->validate(['cover' => 'image|mimes:jpeg,png,jpg,webp|max:2048']);
-
-            // Hapus file lama jika ada dan bukan gambar default template
-            if ($berita->cover && $berita->cover !== 'news1.jpeg' && $berita->cover !== 'news2.jpeg') {
-                File::delete(public_path('img/' . $berita->cover));
-            }
-
-            $imageName = time() . '.' . $request->cover->extension();
-            $request->cover->move(public_path('img'), $imageName);
-            $data['cover'] = $imageName;
-        }
-
-        $berita->update($data);
-
-        // Kembalikan ke halaman sebelumnya dengan memicu flash session sukses untuk showToast
-        return back()->with('success', 'Artikel berita berhasil diperbarui dan disinkronkan.');
     }
 }
