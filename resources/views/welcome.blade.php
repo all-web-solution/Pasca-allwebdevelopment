@@ -13,7 +13,7 @@
         --card-shadow: 0 20px 40px -10px rgba(0,0,0,0.05);
         --card-shadow-hover: 0 30px 60px -15px rgba(0,0,0,0.15);
         --radius-lg: 24px;
-        --smooth-transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        --smooth-transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     /* ================================================================= */
@@ -91,20 +91,23 @@
     .search-wrapper-inline i { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--gray); font-size: 1.1rem; }
 
     /* ================================================================= */
-    /* UI BARU: PROGRAM STUDI BENTO GRID STYLE */
+    /* UI FIX: PROGRAM STUDI RESPONSIVE MASONRY GRID */
     /* ================================================================= */
-    .prodi-bento-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; grid-auto-rows: minmax(280px, auto); }
+    /* Menghapus asimetris yang bikin berantakan, diganti dengan Grid rapi */
+    .prodi-bento-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
+        gap: 24px; 
+    }
+    
     .prodi-bento-card {
         border-radius: var(--radius-lg); padding: 35px; position: relative; overflow: hidden;
         display: flex; flex-direction: column; transition: var(--smooth-transition); cursor: pointer;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.04); text-decoration: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.04); text-decoration: none; min-height: 280px;
     }
-    .prodi-bento-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: 0 25px 50px rgba(0,0,0,0.1); }
+    .prodi-bento-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: 0 25px 50px rgba(0,0,0,0.1); z-index: 10; }
 
-    .bento-span-4 { grid-column: span 4; flex-direction: row; align-items: center; justify-content: space-between; gap: 40px; }
-    .bento-span-2 { grid-column: span 2; }
-    .bento-span-1 { grid-column: span 1; }
-
+    /* Pengaturan Tema Warna Card (Siklus 3 Warna) */
     .theme-green { background: var(--primary); color: white; }
     .theme-yellow { background: var(--yellow-accent); color: var(--dark); }
     .theme-teal { background: var(--teal-accent); color: white; }
@@ -126,9 +129,9 @@
     .prodi-bento-card:hover .bento-watermark { transform: scale(1.15) rotate(-5deg); }
 
     .bento-content { position: relative; z-index: 1; display: flex; flex-direction: column; flex-grow: 1; }
-    .bento-content h3 { font-size: 1.5rem; font-weight: 800; margin-bottom: 12px; line-height: 1.3; }
-    .bento-span-4 .bento-content h3 { font-size: 1.8rem; }
+    .bento-content h3 { font-size: 1.45rem; font-weight: 800; margin-bottom: 12px; line-height: 1.4; }
     .bento-content p { font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; flex-grow: 1; }
+    
     .theme-green .bento-content p, .theme-teal .bento-content p { color: rgba(255,255,255,0.8); }
     .theme-yellow .bento-content p { color: rgba(15, 23, 42, 0.7); font-weight: 500; }
 
@@ -206,32 +209,20 @@
     /* ================================================================= */
     /* RESPONSIVE DESIGN UTAMA (ANDROID / MOBILE) */
     /* ================================================================= */
-    @media (max-width: 1024px) {
-        .prodi-bento-grid { grid-template-columns: repeat(2, 1fr); }
-        .bento-span-4, .bento-span-2 { grid-column: span 2; }
-        .bento-span-4 { flex-direction: column; align-items: flex-start; gap: 20px; }
-        .bento-span-1 { grid-column: span 1; }
-    }
     @media (max-width: 992px) { .news-magazine-grid { grid-template-columns: 1fr; } }
     @media (max-width: 768px) {
-        /* Stats Fix Untuk Mobile Android */
         .stats-container { padding: 0 6%; margin-top: -40px; }
         .stats-grid { grid-template-columns: 1fr; border-radius: 20px; }
         .stat-item { padding: 35px 20px; }
-        
-        /* Ubah Garis Pembatas Vertikal Jadi Horizontal */
         .stat-item:not(:last-child)::after {
             right: 20%; top: auto; bottom: 0; height: 1px; width: 60%;
             background: linear-gradient(to right, transparent, rgba(0,0,0,0.08), transparent);
         }
         [data-theme="dark"] .stat-item:not(:last-child)::after { background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent); }
-        
         .stat-icon { width: 50px; height: 50px; font-size: 1.3rem; margin-bottom: 12px; }
         .stat-item h3 { font-size: 2.8rem; }
-
         .search-wrapper-inline { max-width: 100%; margin-top: 15px; }
         .prodi-bento-grid { grid-template-columns: 1fr; }
-        .bento-span-4, .bento-span-2, .bento-span-1 { grid-column: span 1; }
     }
     @media (max-width: 576px) { 
         .news-list-item { flex-direction: column; align-items: flex-start; }
@@ -242,7 +233,6 @@
 @endsection
 
 @section('content')
-    <!-- HERO SECTION -->
     <main class="hero" id="home">
         @forelse($sliders as $index => $slide)
         <div class="slide {{ $index === 0 ? 'active' : '' }}" style="background: url('{{ asset('uploads/slider/' . $slide->image) }}') center/cover no-repeat; background-color: var(--primary);">
@@ -288,7 +278,7 @@
         </div>
     </div>
 
-    <!-- SEKSI PROGRAM STUDI (BENTO GRID APPLE STYLE) -->
+    <!-- SEKSI PROGRAM STUDI FIX (MASONRY GRID STYLE) -->
     <section id="prodi">
         <div class="section-header-flex" style="align-items: center;">
             <div class="title-part">
@@ -308,15 +298,16 @@
         <div class="prodi-bento-grid" id="prodiContainer">
             @foreach ($prodi as $index => $p)
                 @php
-                    $themeClass = ''; $spanClass = ''; $mod = $index % 5;
-                    if ($mod == 0) { $themeClass = 'theme-green'; $spanClass = 'bento-span-2'; } 
-                    elseif ($mod == 1) { $themeClass = 'theme-yellow'; $spanClass = 'bento-span-2'; } 
-                    elseif ($mod == 2) { $themeClass = 'theme-teal'; $spanClass = 'bento-span-4'; } 
-                    elseif ($mod == 3) { $themeClass = 'theme-yellow'; $spanClass = 'bento-span-1'; } 
-                    else { $themeClass = 'theme-green'; $spanClass = 'bento-span-1'; }
+                    // MURNI ROTASI TIGA WARNA
+                    $themeClass = ''; 
+                    $mod = $index % 3;
+                    if ($mod == 0) { $themeClass = 'theme-green'; } 
+                    elseif ($mod == 1) { $themeClass = 'theme-yellow'; } 
+                    else { $themeClass = 'theme-teal'; }
                 @endphp
 
-                <a href="#" class="prodi-bento-card {{ $themeClass }} {{ $spanClass }}" data-search="{{ $p->search_tags }}" onclick="event.preventDefault(); showToast('Membuka rincian prodi {{ $p->nama }}');">
+                <!-- Hapus class span asimetris agar semua kartu auto-responsive mengikuti lebar konten -->
+                <a href="#" class="prodi-bento-card {{ $themeClass }}" data-search="{{ $p->search_tags }}" onclick="event.preventDefault(); showToast('Membuka rincian prodi {{ $p->nama }}');">
                     <i class="fa-solid {{ $p->icon }} bento-watermark"></i>
                     <div class="bento-icon-small"><i class="fa-solid {{ $p->icon }}"></i></div>
                     <div class="bento-content">
