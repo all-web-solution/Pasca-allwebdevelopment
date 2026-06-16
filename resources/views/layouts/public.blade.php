@@ -61,13 +61,16 @@
         nav.scrolled { top: 0; left: 0; width: 100%; border-radius: 0; background: var(--primary); border: none; }
         nav.scrolled .logo h1, nav.scrolled .nav-links a, nav.scrolled .action-btn i { color: #ffffff; }
         .logo h1 { font-size: 1.25rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+        /* FIX: Menghapus position: relative di nav-right agar nav-links bisa melebar seukuran navbar */
         .nav-right { display: flex; align-items: center; gap: 24px; }
-        .nav-links { display: flex; list-style: none; gap: 28px; }
+        .nav-links { display: flex; list-style: none; gap: 28px; transition: var(--transition); }
         .nav-links a { text-decoration: none; color: var(--dark); font-weight: 600; font-size: 0.95rem; transition: var(--transition); }
         .nav-links a:hover { color: var(--accent); }
         .action-btn { cursor: pointer; font-size: 1.2rem; color: var(--primary); transition: var(--transition); }
-        .menu-toggle { display: none; flex-direction: column; gap: 6px; cursor: pointer; }
-        .menu-toggle span { width: 24px; height: 2px; background: var(--dark); transition: var(--transition); }
+        .menu-toggle { display: none; flex-direction: column; gap: 6px; cursor: pointer; z-index: 1001; }
+        .menu-toggle span { width: 24px; height: 2px; background: var(--primary); transition: var(--transition); border-radius: 2px; }
+        [data-theme="dark"] .menu-toggle span { background: var(--accent); }
+        nav.scrolled .menu-toggle span { background: #ffffff; }
 
         /* --- GLOBAL APP SECTIONS & HERO --- */
         .hero { position: relative; height: 95vh; width: 100%; overflow: hidden; }
@@ -124,14 +127,65 @@
         .footer-legal-links a { color: #64748B; text-decoration: none; font-size: 0.85rem; transition: var(--transition); }
         .footer-legal-links a:hover { color: var(--accent); }
 
-        @media (max-width: 992px) { .footer-grid-layout { grid-template-columns: 1fr 1fr; gap: 32px; } }
-        @media (max-width: 576px) { .footer-grid-layout { grid-template-columns: 1fr; } .footer-copyright-row { flex-direction: column; text-align: center; } }
-
         /* --- GLOBAL CUSTOM TOAST STYLING --- */
         #toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; }
         .toast { background: #0F172A; color: #FFFFFF; padding: 14px 24px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.15); margin-top: 10px; transform: translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; align-items: center; gap: 10px; }
         [data-theme="dark"] .toast { background: #FFFFFF; color: #0F172A; }
         .toast.show { transform: translateY(0); opacity: 1; }
+
+        /* ========================================================================= */
+        /* RESPONSIVE DESIGN UTAMA (ALL DEVICES) */
+        /* ========================================================================= */
+        @media (max-width: 992px) { 
+            .footer-grid-layout { grid-template-columns: 1fr 1fr; gap: 32px; } 
+            .nav-links { gap: 15px; }
+            .nav-links a { font-size: 0.85rem; }
+            .logo h1 { font-size: 1.15rem; }
+            .slide-content h2 { font-size: 2.8rem; }
+        }
+        
+        @media (max-width: 768px) { 
+            /* PERBAIKAN NAVBAR MOBILE (FULL WIDTH & RAPI) */
+            .menu-toggle { display: flex; }
+            .nav-links {
+                position: absolute; 
+                top: calc(100% + 15px); /* Turun sedikit dari bawah navbar */
+                left: 0; 
+                width: 100%; /* Melebar 100% dari navbar */
+                flex-direction: column; 
+                background: var(--card-bg);
+                backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+                padding: 25px; 
+                border-radius: var(--radius);
+                border: 1px solid var(--card-border);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+                opacity: 0; 
+                pointer-events: none; 
+                transform: translateY(-15px);
+                text-align: center; 
+                gap: 20px;
+                z-index: 999;
+            }
+            .nav-links.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+            .nav-right { gap: 15px; }
+            
+            /* Perbaikan Font di Mobile */
+            .slide-content h2 { font-size: 2.2rem; }
+            .badge-hero { font-size: 0.75rem; }
+            
+            /* Perbaikan Toast Notifikasi Mobile */
+            #toast-container { left: 20px; right: 20px; bottom: 20px; display: flex; flex-direction: column; align-items: center; }
+            .toast { width: 100%; justify-content: center; text-align: center; }
+        }
+        
+        @media (max-width: 576px) { 
+            .footer-grid-layout { grid-template-columns: 1fr; gap: 40px; } 
+            .footer-copyright-row { flex-direction: column; text-align: center; gap: 12px; } 
+            .logo h1 { font-size: 1.05rem; }
+            /* Menyesuaikan lebar padding luar untuk layar HP kecil */
+            nav { padding: 16px 5%; width: 95%; left: 2.5%; }
+            .btn-modern { width: 100%; justify-content: center; }
+        }
     </style>
     @yield('styles')
 </head>
@@ -149,6 +203,7 @@
                 <li><a href="{{ route('public.penelitian') }}">Penelitian</a></li>
                 <li><a href="{{ route('public.alumni') }}">Alumni</a></li>
                 <li><a href="{{ route('public.dokumen') }}">Dokumen</a></li>
+                <li><a href="{{ route('public.galeri') }}">Gallery</a></li>
                 <li><a href="{{ route('login') }}">Login</a></li>
             </ul>
             <div class="action-btn" id="themeToggle"><i class="fa-solid fa-moon"></i></div>
@@ -244,7 +299,19 @@
 
         const menuToggle = document.getElementById('menuToggle');
         const navLinks = document.getElementById('navLinks');
-        menuToggle.addEventListener('click', () => { navLinks.classList.toggle('active'); });
+        
+        // Logika toggle menu untuk mobile
+        menuToggle.addEventListener('click', () => { 
+            navLinks.classList.toggle('active'); 
+        });
+
+        // Menutup menu jika klik di luar navbar pada mode mobile
+        document.addEventListener('click', function(event) {
+            const nav = document.getElementById('navbar');
+            if (!nav.contains(event.target) && navLinks.classList.contains('active')) {
+                navLinks.classList.remove('active');
+            }
+        });
     </script>
     @yield('scripts')
 

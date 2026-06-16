@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Alumni;
 use App\Models\Berita;
 use App\Models\Dokumen;
+use App\Models\Galeri;
 use App\Models\GuruBesar;
 use App\Models\HeroSlider;
 use App\Models\Penelitian;
 use App\Models\ProgramStudi;
 use App\Models\Seminar;
 use App\Models\VisiPendidikan;
+use App\Models\Faq; // <-- WAJIB DIPANGGIL
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
@@ -50,8 +52,14 @@ class PublicController extends Controller
     }
 
     // =========================================================================
-    // HALAMAN SUB-MENU JARINGAN ALUMNI
+    // HALAMAN SUB-MENU JARINGAN ALUMNI & GALERI
     // =========================================================================
+    public function galeri()
+    {
+        $sliders = HeroSlider::all();
+        $galeris = Galeri::latest()->get();
+        return view('public.galeri', compact('sliders', 'galeris'));
+    }
 
     public function alumni()
     {
@@ -66,14 +74,18 @@ class PublicController extends Controller
 
         return view('public.alumni', compact('sliders', 'alumni', 'settings'));
     }
+
     // =========================================================================
-    // HALAMAN REPOSITORI UNDUHAN DOKUMEN RESMI
+    // HALAMAN REPOSITORI UNDUHAN DOKUMEN RESMI & FAQ
     // =========================================================================
     public function dokumen()
     {
         $sliders = HeroSlider::all();
         $dokumen = Dokumen::all();
-        return view('public.dokumen', compact('sliders', 'dokumen'));
+        $faqs = Faq::latest()->get(); // <-- TARIK DATA FAQ DARI DATABASE
+
+        // Parsing variabel $faqs ke halaman public.dokumen
+        return view('public.dokumen', compact('sliders', 'dokumen', 'faqs'));
     }
 
     // =========================================================================

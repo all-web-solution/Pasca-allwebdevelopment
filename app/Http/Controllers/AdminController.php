@@ -11,6 +11,8 @@ use App\Models\Penelitian;
 use App\Models\ProgramStudi;
 use App\Models\Seminar;
 use App\Models\VisiPendidikan;
+use App\Models\Faq;         // <-- WAJIB ADA (Model FAQ)
+use App\Models\Galeri;      // <-- WAJIB ADA (Model Galeri)
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
@@ -40,14 +42,20 @@ class AdminController extends Controller
         $penat = Penelitian::latest()->get();
         $seminars = Seminar::latest()->get();
 
+        // Panggil Data FAQ dan Galeri
+        $faqs = Faq::latest()->get();
+        $galeris = Galeri::latest()->get();
+
         // Load file pengaturan jika ada
         $settings = [];
         if (File::exists(storage_path('app/settings.json'))) {
             $settings = json_decode(File::get(storage_path('app/settings.json')), true);
         }
 
-        return view('admin.arsip', compact('sliders', 'dokumens', 'alumnis', 'penat', 'seminars', 'settings'));
+        // Parsing semuanya ke View Arsip Admin
+        return view('admin.arsip', compact('sliders', 'dokumens', 'alumnis', 'penat', 'seminars', 'settings', 'faqs', 'galeris'));
     }
+
     public function updatePengaturan(Request $request)
     {
         $data = $request->validate([
@@ -213,7 +221,6 @@ class AdminController extends Controller
         return back()->with('success', 'Data Guru Besar berhasil diperbarui.');
     }
 
-    // METHOD FIX SINKRONISASI: Menghapus data Profesor secara permanen dari DB dan server
     public function destroyGuruBesar($id)
     {
         $gb = GuruBesar::findOrFail($id);
@@ -501,5 +508,79 @@ class AdminController extends Controller
     {
         Seminar::findOrFail($id)->delete();
         return back()->with('success', 'Agenda seminar berhasil dihapus.');
+    }
+
+    // =========================================================================
+    // KONTROL MODUL: FAQ (PERTANYAAN UMUM)
+    // =========================================================================
+    public function storeFaq(Request $request)
+    {
+        Faq::create($request->validate(['pertanyaan' => 'required|string', 'jawaban' => 'required|string']));
+        return back()->with('success', 'Pertanyaan FAQ berhasil ditambahkan.');
+    }
+
+    public function updateFaq(Request $request, $id)
+    {
+        Faq::findOrFail($id)->update($request->validate(['pertanyaan' => 'required|string', 'jawaban' => 'required|string']));
+        return back()->with('success', 'Pertanyaan FAQ berhasil diperbarui.');
+    }
+
+    public function destroyFaq($id)
+    {
+        Faq::findOrFail($id)->delete();
+        return back()->with('success', 'Pertanyaan FAQ berhasil dihapus.');
+    }
+
+    // =========================================================================
+    // KONTROL MODUL: GALERI & DOKUMENTASI
+    // =========================================================================
+    public function storeGaleri(Request $request)
+    {
+        $data = $request->validate([
+            'judul' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'gambar' => 'required|image|mimes:jpeg,png,jpg,webp|max:3072'
+        ]);
+
+        if ($request->hasFile('gambar')) {
+            $imgName = 'galeri_' . time() . '.' . $request->gambar->extension();
+            $request->gambar->move(public_path('uploads/galeri'), $imgName);
+            $data['gambar'] = $imgName;
+        }
+
+        Galeri::create($data);
+        return back()->with('success', 'Foto Galeri berhasil diunggah.');
+    }
+
+    public function updateGaleri(Request $request, $id)
+    {
+        $galeri = Galeri::findOrFail($id);
+        $data = $request->validate([
+            'judul' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        if ($request->hasFile('gambar')) {
+            $request->validate(['gambar' => 'image|mimes:jpeg,png,jpg,webp|max:3072']);
+            if ($galeri->gambar && File::exists(public_path('uploads/galeri/' . $galeri->gambar))) {
+                File::delete(public_path('uploads/galeri/' . $galeri->gambar));
+            }
+            $imgName = 'galeri_' . time() . '.' . $request->gambar->extension();
+            $request->gambar->move(public_path('uploads/galeri'), $imgName);
+            $data['gambar'] = $imgName;
+        }
+
+        $galeri->update($data);
+        return back()->with('success', 'Data Galeri berhasil diperbarui.');
+    }
+
+    public function destroyGaleri($id)
+    {
+        $galeri = Galeri::findOrFail($id);
+        if ($galeri->gambar && File::exists(public_path('uploads/galeri/' . $galeri->gambar))) {
+            File::delete(public_path('uploads/galeri/' . $galeri->gambar));
+        }
+        $galeri->delete();
+        return back()->with('success', 'Foto Galeri berhasil dihapus permanen.');
     }
 }

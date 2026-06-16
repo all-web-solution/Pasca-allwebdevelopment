@@ -20,7 +20,7 @@
         background: var(--card-bg); border: 1px solid var(--border-color);
         width: 90%; max-width: 600px; padding: 40px; border-radius: 20px;
         position: relative; transform: scale(0.94); transition: var(--transition);
-        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15); max-height: 90vh; overflow-y: auto;
     }
     .admin-modal-overlay.active .admin-modal-window { transform: scale(1); }
     .modal-close-trigger { 
@@ -50,7 +50,6 @@
         <script>window.addEventListener('load', () => showToast("{{ session('success') }}"))</script>
     @endif
 
-    <!-- PENGATURAN PARAMETER GLOBAL -->
     <div class="control-container-card" id="kontrol-parameter">
         <div class="card-panel-heading">
             <h3><i class="fa-solid fa-sliders" style="color:var(--primary)"></i> Pengaturan Parameter & Angka Statistik Global</h3>
@@ -89,7 +88,6 @@
 
     <hr class="panel-section-divider">
 
-    <!-- MANAJEMEN BANNER HERO SLIDER -->
     <div class="control-container-card" id="kontrol-slider">
         <div class="card-panel-heading">
             <h3><i class="fa-solid fa-images" style="color:var(--primary)"></i> Tambah Banner Hero Slider</h3>
@@ -145,7 +143,6 @@
                             <div class="action-row-buttons">
                                 <button class="btn-action-trigger show-type btn-show-slider" data-title="{{ $s->title }}" data-badge="{{ $s->badge_text }}" data-subtitle="{{ $s->subtitle }}" data-link="{{ $s->link_url }}" data-image="{{ asset('uploads/slider/' . $s->image) }}"><i class="fa-solid fa-eye"></i></button>
                                 
-                                <!-- TOMBOL EDIT SLIDER KEBAL CRASH -->
                                 <button class="btn-action-trigger edit-type btn-edit-slider" 
                                         data-id="{{ $s->id }}" 
                                         data-title="{{ $s->title }}" 
@@ -171,7 +168,6 @@
 
     <hr class="panel-section-divider">
 
-    <!-- UPLOAD DOKUMEN AKADEMIK -->
     <div class="control-container-card" id="kontrol-dokumen">
         <div class="card-panel-heading">
             <h3><i class="fa-solid fa-file-arrow-up" style="color:var(--primary)"></i> Upload Berkas Dokumen Akademik</h3>
@@ -234,7 +230,6 @@
 
     <hr class="panel-section-divider">
 
-    <!-- REKAM DATA ALUMNI -->
     <div class="control-container-card" id="kontrol-alumni">
         <div class="card-panel-heading">
             <h3><i class="fa-solid fa-user-graduate" style="color:var(--primary)"></i> Input Rekam Data Alumni</h3>
@@ -304,7 +299,6 @@
 
     <hr class="panel-section-divider">
 
-    <!-- AGENDA SEMINAR -->
     <div class="control-container-card" id="kontrol-seminar">
         <div class="card-panel-heading">
             <h3><i class="fa-solid fa-calendar-days" style="color:var(--primary)"></i> Tambah Agenda Seminar & Kolokium</h3>
@@ -369,7 +363,6 @@
 
     <hr class="panel-section-divider">
 
-    <!-- ARSIP RISET PENELITIAN -->
     <div class="control-container-card" id="kontrol-penelitian">
         <div class="card-panel-heading">
             <h3><i class="fa-solid fa-book-bookmark" style="color:var(--primary)"></i> Input Publikasi Jurnal & Riset Penelitian</h3>
@@ -436,7 +429,126 @@
         </div>
     </div>
 
-    <!-- 1. MODAL VIEW BANNER SLIDER -->
+    <hr class="panel-section-divider">
+
+    <div class="control-container-card" id="kontrol-faq">
+        <div class="card-panel-heading">
+            <h3><i class="fa-solid fa-circle-question" style="color:var(--primary)"></i> Kelola Pertanyaan Umum (FAQ)</h3>
+        </div>
+        <form action="{{ route('admin.faq.store') }}" method="POST" class="panel-form-body">
+            @csrf
+            <div class="form-flex-row">
+                <div class="form-input-cell" style="width: 100%;">
+                    <label>Teks Pertanyaan</label>
+                    <input type="text" name="pertanyaan" required placeholder="Contoh: Apa syarat pendaftaran S2?">
+                </div>
+            </div>
+            <div class="form-flex-row" style="align-items: flex-end; margin-bottom:0;">
+                <div class="form-input-cell" style="width: 100%; flex: 2;">
+                    <label>Jawaban Detail</label>
+                    <textarea name="jawaban" rows="3" required placeholder="Tulis rincian jawaban di sini..."></textarea>
+                </div>
+                <button type="submit" class="btn-modern">Simpan FAQ</button>
+            </div>
+        </form>
+
+        <div class="tabular-view-shell">
+            <table class="clean-data-table">
+                <thead>
+                    <tr>
+                        <th>Pertanyaan</th>
+                        <th>Jawaban Singkat</th>
+                        <th style="text-align: right;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($faqs ?? [] as $f)
+                    <tr>
+                        <td><strong>{{ $f->pertanyaan }}</strong></td>
+                        <td>{{ Str::limit($f->jawaban, 60) }}</td>
+                        <td align="right">
+                            <div class="action-row-buttons">
+                                <button class="btn-action-trigger edit-type btn-edit-faq" data-id="{{ $f->id }}" data-tanya="{{ $f->pertanyaan }}" data-jawab="{{ $f->jawaban }}"><i class="fa-solid fa-pen"></i></button>
+                                <form action="{{ route('admin.faq.delete', $f->id) }}" method="POST" onsubmit="return confirm('Hapus pertanyaan FAQ ini?')" style="display:inline;">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn-action-trigger delete-type"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr class="panel-section-divider">
+
+    <div class="control-container-card" id="kontrol-galeri">
+        <div class="card-panel-heading">
+            <h3><i class="fa-solid fa-camera-retro" style="color:var(--primary)"></i> Upload Galeri & Dokumentasi</h3>
+        </div>
+        <form action="{{ route('admin.galeri.store') }}" method="POST" enctype="multipart/form-data" class="panel-form-body">
+            @csrf
+            <div class="form-flex-row">
+                <div class="form-input-cell" style="flex: 2;">
+                    <label>Judul Dokumentasi</label>
+                    <input type="text" name="judul" required placeholder="Contoh: Sidang Tesis Angkatan 2026">
+                </div>
+                <div class="form-input-cell" style="flex: 1;">
+                    <label>File Foto (.jpg / .png / .webp)</label>
+                    <input type="file" name="gambar" required>
+                </div>
+            </div>
+            <div class="form-flex-row" style="align-items: flex-end; margin-bottom:0;">
+                <div class="form-input-cell" style="flex: 2;">
+                    <label>Deskripsi Kegiatan (Opsional)</label>
+                    <textarea name="deskripsi" rows="2" placeholder="Tulis deskripsi kegiatan di sini..."></textarea>
+                </div>
+                <button type="submit" class="btn-modern">Upload Foto</button>
+            </div>
+        </form>
+
+        <div class="tabular-view-shell">
+            <table class="clean-data-table">
+                <thead>
+                    <tr>
+                        <th>Judul Foto</th>
+                        <th>Preview Media</th>
+                        <th style="text-align: right;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($galeris ?? [] as $g)
+                    <tr>
+                        <td><strong>{{ $g->judul }}</strong></td>
+                        <td>
+                            <div style="width: 70px; height: 45px; background: url('{{ asset('uploads/galeri/'.$g->gambar) }}') center/cover; border-radius: 6px; border: 1px solid var(--border-color);"></div>
+                        </td>
+                        <td align="right">
+                            <div class="action-row-buttons">
+                                <button class="btn-action-trigger edit-type btn-edit-galeri" 
+                                        data-id="{{ $g->id }}" 
+                                        data-judul="{{ $g->judul }}" 
+                                        data-deskripsi="{{ $g->deskripsi }}" 
+                                        data-gambar="{{ asset('uploads/galeri/'.$g->gambar) }}">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                
+                                <form action="{{ route('admin.galeri.delete', $g->id) }}" method="POST" onsubmit="return confirm('Hapus permanen foto galeri ini?')" style="display:inline;">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn-action-trigger delete-type"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
     <div class="admin-modal-overlay" id="modalShowSlider">
         <div class="admin-modal-window">
             <span class="modal-close-trigger" onclick="closeModal('modalShowSlider')">&times;</span>
@@ -449,7 +561,6 @@
         </div>
     </div>
 
-    <!-- 2. MODAL EDIT BANNER SLIDER (BARU & LENGKAP) -->
     <div class="admin-modal-overlay" id="modalEditSlider">
         <div class="admin-modal-window">
             <span class="modal-close-trigger" onclick="closeModal('modalEditSlider')">&times;</span>
@@ -490,7 +601,6 @@
         </div>
     </div>
 
-    <!-- 3. MODAL VIEW ALUMNI -->
     <div class="admin-modal-overlay" id="modalShowAlumni">
         <div class="admin-modal-window">
             <span class="modal-close-trigger" onclick="closeModal('modalShowAlumni')">&times;</span>
@@ -504,6 +614,59 @@
             </div>
             <div class="modal-data-strip"><i class="fa-solid fa-calendar-check"></i> <p><b>Status Alumni:</b> Angkatan Kelulusan Tahun <span id="vAlumniLulus"></span></p></div>
             <div id="vAlumniTesti" class="biografi-preview-box"></div>
+        </div>
+    </div>
+
+    <div class="admin-modal-overlay" id="modalEditFaq">
+        <div class="admin-modal-window">
+            <span class="modal-close-trigger" onclick="closeModal('modalEditFaq')">&times;</span>
+            <h3 style="margin-bottom: 25px;"><i class="fa-solid fa-pen-to-square" style="color:var(--primary)"></i> Edit Pertanyaan FAQ</h3>
+            <form id="formEditFaq" method="POST">
+                @csrf @method('PUT')
+                <div class="form-flex-row">
+                    <div class="form-input-cell" style="width:100%;">
+                        <label>Teks Pertanyaan</label>
+                        <input type="text" id="editFaqPertanyaan" name="pertanyaan" required>
+                    </div>
+                </div>
+                <div class="form-flex-row" style="flex-direction:column; gap:15px;">
+                    <div class="form-input-cell" style="width:100%;">
+                        <label>Jawaban Detail</label>
+                        <textarea id="editFaqJawaban" name="jawaban" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-modern" style="width:fit-content; align-self:flex-end;">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="admin-modal-overlay" id="modalEditGaleri">
+        <div class="admin-modal-window">
+            <span class="modal-close-trigger" onclick="closeModal('modalEditGaleri')">&times;</span>
+            <h3 style="margin-bottom: 25px;"><i class="fa-solid fa-pen-to-square" style="color:var(--primary)"></i> Perbarui Foto Galeri</h3>
+            <form id="formEditGaleri" method="POST" enctype="multipart/form-data">
+                @csrf @method('PUT')
+                <div class="form-flex-row">
+                    <div class="form-input-cell" style="width:100%;">
+                        <label>Judul Dokumentasi</label>
+                        <input type="text" id="editGaleriJudul" name="judul" required>
+                    </div>
+                </div>
+                <div class="form-flex-row" style="align-items: center; gap: 20px;">
+                    <div id="editGaleriImagePreview" style="width: 100px; height: 75px; border-radius: 8px; background-size: cover; background-position: center; border: 1px solid var(--border-color); flex-shrink: 0;"></div>
+                    <div class="form-input-cell">
+                        <label>Ganti Gambar Berkas (Opsional)</label>
+                        <input type="file" id="editGaleriImageInput" name="gambar" accept="image/*">
+                    </div>
+                </div>
+                <div class="form-flex-row" style="flex-direction:column; gap:15px;">
+                    <div class="form-input-cell" style="width:100%;">
+                        <label>Deskripsi Kegiatan</label>
+                        <textarea id="editGaleriDeskripsi" name="deskripsi" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn-modern" style="width:fit-content; align-self:flex-end;">Simpan Perubahan</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -528,7 +691,7 @@
             });
         });
 
-        // --- ENGINE EVENT EDIT SLIDER (ANTI-CRASH) ---
+        // --- ENGINE EVENT EDIT SLIDER ---
         document.querySelectorAll('.btn-edit-slider').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
@@ -566,6 +729,42 @@
                 document.getElementById('modalShowAlumni').classList.add('active');
             });
         });
+
+        // --- ENGINE EVENT EDIT FAQ ---
+        document.querySelectorAll('.btn-edit-faq').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                document.getElementById('formEditFaq').action = `/admin/faq/${id}`;
+                document.getElementById('editFaqPertanyaan').value = this.getAttribute('data-tanya');
+                document.getElementById('editFaqJawaban').value = this.getAttribute('data-jawab');
+                document.getElementById('modalEditFaq').classList.add('active');
+            });
+        });
+
+        // --- ENGINE EVENT EDIT GALERI (BARU & RESPONSIF) ---
+        document.querySelectorAll('.btn-edit-galeri').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                document.getElementById('formEditGaleri').action = `/admin/galeri/${id}`;
+                document.getElementById('editGaleriJudul').value = this.getAttribute('data-judul');
+                document.getElementById('editGaleriDeskripsi').value = this.getAttribute('data-deskripsi');
+                document.getElementById('editGaleriImagePreview').style.backgroundImage = `url('${this.getAttribute('data-gambar')}')`;
+                document.getElementById('modalEditGaleri').classList.add('active');
+            });
+        });
+
+        // --- LIVE PREVIEW IMAGE READER UNTUK EDIT GALERI ---
+        const imgInputGaleri = document.getElementById('editGaleriImageInput');
+        if(imgInputGaleri) {
+            imgInputGaleri.addEventListener('change', function() {
+                const file = this.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => document.getElementById('editGaleriImagePreview').style.backgroundImage = `url('${e.target.result}')`;
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
     });
 </script>
 @endsection

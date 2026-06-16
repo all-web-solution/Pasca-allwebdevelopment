@@ -14,6 +14,7 @@ Route::get('/public/penelitian', [PublicController::class, 'penelitian'])->name(
 Route::get('/public/alumni', [PublicController::class, 'alumni'])->name('public.alumni');
 Route::get('/public/dokumen', [PublicController::class, 'dokumen'])->name('public.dokumen');
 Route::get('/download/dokumen/{id}', [PublicController::class, 'downloadDokumen'])->name('public.dokumen.download')->whereNumber('id');
+Route::get('/public/galeri', [PublicController::class, 'galeri'])->name('public.galeri');
 
 // =========================================================================
 // 🔐 JALUR AUTENTIKASI (Pintu Masuk & Keluar)
@@ -60,7 +61,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/arsip', [AdminController::class, 'arsipAdmin'])->name('admin.arsip');
     Route::post('/admin/pengaturan', [AdminController::class, 'updatePengaturan'])->name('admin.pengaturan.update');
 
-    // Hero Slider Carousels (FIXED: Route PUT Edit Aktif & Aman)
+    // Hero Slider Carousels
     Route::post('/admin/slider', [AdminController::class, 'storeSlider'])->name('admin.slider.store');
     Route::put('/admin/slider/{id}', [AdminController::class, 'updateSlider'])->name('admin.slider.update')->whereNumber('id');
     Route::delete('/admin/slider/{id}', [AdminController::class, 'destroySlider'])->name('admin.slider.delete')->whereNumber('id');
@@ -81,4 +82,14 @@ Route::middleware(['auth'])->group(function () {
     // Agenda Kolokium & Seminar
     Route::post('/admin/seminar', [AdminController::class, 'storeSeminar'])->name('admin.seminar.store');
     Route::delete('/admin/seminar/{id}', [AdminController::class, 'destroySeminar'])->name('admin.seminar.delete')->whereNumber('id');
+
+    // Route FAQ Dokumen
+    Route::post('/admin/faq', [AdminController::class, 'storeFaq'])->name('admin.faq.store');
+    Route::put('/admin/faq/{id}', [AdminController::class, 'updateFaq'])->name('admin.faq.update');
+    Route::delete('/admin/faq/{id}', [AdminController::class, 'destroyFaq'])->name('admin.faq.delete');
+
+    // Route Galeri & Dokumentasi (INI YANG BIKIN ERROR TADI COK)
+    Route::post('/admin/galeri', [AdminController::class, 'storeGaleri'])->name('admin.galeri.store');
+    Route::put('/admin/galeri/{id}', [AdminController::class, 'updateGaleri'])->name('admin.galeri.update')->whereNumber('id');
+    Route::delete('/admin/galeri/{id}', [AdminController::class, 'destroyGaleri'])->name('admin.galeri.delete')->whereNumber('id');
 });
