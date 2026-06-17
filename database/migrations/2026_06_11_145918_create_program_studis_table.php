@@ -14,9 +14,20 @@ return new class extends Migration
         Schema::create('program_studis', function (Blueprint $table) {
             $table->id();
             $table->string('nama');
+            // INI FIELD BARU NYA GW SELIPIN DI SINI
+            $table->string('slug')->unique()->nullable();
+
             $table->string('icon')->default('fa-graduation-cap');
             $table->string('search_tags');
             $table->text('deskripsi');
+
+            // INI FIELD UNTUK HALAMAN DETAIL PRODI-NYA
+            $table->longText('profil')->nullable();
+            $table->longText('visi_misi')->nullable();
+            $table->longText('kurikulum')->nullable();
+            $table->longText('dosen')->nullable();
+            $table->longText('dokumen')->nullable();
+
             $table->timestamps();
         });
     }

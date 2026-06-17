@@ -186,22 +186,23 @@
                 <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Navigasi taktis untuk mengelola form input data publik langsung ke modul spesifik:</p>
                 
                 <div class="quick-shortcut-box">
-                    <a href="{{ route('admin.pendidikan') }}#kontrol-prodi" class="shortcut-btn">
+                    <!-- LINK SHORTCUT SUDAH DIPERBARUI SEMUA -->
+                    <a href="{{ route('admin.prodi') }}" class="shortcut-btn">
                         <i class="fa-solid fa-circle-plus" style="color:var(--primary)"></i> Input Prodi Baru
                     </a>
-                    <a href="{{ route('admin.pendidikan') }}#kontrol-gurubesar" class="shortcut-btn">
+                    <a href="{{ route('admin.gurubesar') }}" class="shortcut-btn">
                         <i class="fa-solid fa-user-plus" style="color:var(--accent)"></i> Tambah Profesor
                     </a>
-                    <a href="{{ route('admin.arsip') }}#kontrol-slider" class="shortcut-btn">
+                    <a href="{{ route('admin.slider') }}" class="shortcut-btn">
                         <i class="fa-solid fa-images" style="color:#3B82F6"></i> Tambah Banner Hero
                     </a>
-                    <a href="{{ route('admin.arsip') }}#kontrol-dokumen" class="shortcut-btn">
+                    <a href="{{ route('admin.dokumen') }}" class="shortcut-btn">
                         <i class="fa-solid fa-file-circle-plus" style="color:var(--primary)"></i> Upload Dokumen
                     </a>
-                    <a href="{{ route('admin.arsip') }}#kontrol-seminar" class="shortcut-btn">
+                    <a href="{{ route('admin.seminar') }}" class="shortcut-btn">
                         <i class="fa-solid fa-calendar-plus" style="color:#D97706"></i> Agenda Seminar
                     </a>
-                    <a href="{{ route('admin.arsip') }}#kontrol-penelitian" class="shortcut-btn">
+                    <a href="{{ route('admin.penelitian') }}" class="shortcut-btn">
                         <i class="fa-solid fa-book" style="color:var(--accent)"></i> Arsip Riset Jurnal
                     </a>
                     <a href="{{ route('admin.berita') }}" class="shortcut-btn" style="grid-column: span 2; justify-content: center;">

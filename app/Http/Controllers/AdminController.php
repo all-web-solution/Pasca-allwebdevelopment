@@ -11,26 +11,14 @@ use App\Models\Penelitian;
 use App\Models\ProgramStudi;
 use App\Models\Seminar;
 use App\Models\VisiPendidikan;
-use App\Models\Faq;         // <-- WAJIB ADA (Model FAQ)
-use App\Models\Galeri;      // <-- WAJIB ADA (Model Galeri)
+use App\Models\Faq;
+use App\Models\Galeri;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str; // <-- Wajib ada untuk generate slug otomatis
 
 class AdminController extends Controller
 {
-    // =========================================================================
-    // MAIN HUB: DASHBOARD EXECUTIVE ANALYTICS LOGS
-    // =========================================================================
-    public function index()
-    {
-        $prodi = ProgramStudi::all();
-        $berita = Berita::latest()->get();
-        $alumni = Alumni::all();
-        $dokumen = Dokumen::all();
-
-        return view('admin.dashboard', compact('prodi', 'berita', 'alumni', 'dokumen'));
-    }
-
     // =========================================================================
     // ACCESS GATEWAY: HALAMAN MANAJEMEN ARSIP TERPADU
     // =========================================================================
@@ -42,17 +30,14 @@ class AdminController extends Controller
         $penat = Penelitian::latest()->get();
         $seminars = Seminar::latest()->get();
 
-        // Panggil Data FAQ dan Galeri
         $faqs = Faq::latest()->get();
         $galeris = Galeri::latest()->get();
 
-        // Load file pengaturan jika ada
         $settings = [];
         if (File::exists(storage_path('app/settings.json'))) {
             $settings = json_decode(File::get(storage_path('app/settings.json')), true);
         }
 
-        // Parsing semuanya ke View Arsip Admin
         return view('admin.arsip', compact('sliders', 'dokumens', 'alumnis', 'penat', 'seminars', 'settings', 'faqs', 'galeris'));
     }
 
@@ -66,7 +51,6 @@ class AdminController extends Controller
             'alumni_section_desc' => 'required|string',
         ]);
 
-        // Simpan data parameter ke dalam file JSON
         File::put(storage_path('app/settings.json'), json_encode($data));
 
         return back()->with('success', 'Parameter statistik dan deskripsi global berhasil diperbarui.');
@@ -135,32 +119,52 @@ class AdminController extends Controller
     }
 
     // =========================================================================
-    // KONTROL MODUL: PROGRAM STUDI ACTION
+    // KONTROL MODUL: PROGRAM STUDI ACTION (SUDAH DISESUAIKAN FIELD BARU)
     // =========================================================================
     public function storeProdi(Request $request)
     {
+        // 1. Validasi semua inputan dari form admin/pendidikan termasuk field baru
         $data = $request->validate([
-            'nama' => 'required|string|max:255',
-            'icon' => 'required|string',
+            'nama'        => 'required|string|max:255',
+            'icon'        => 'required|string',
             'search_tags' => 'required|string',
-            'deskripsi' => 'required|string',
+            'deskripsi'   => 'required|string',
+            'profil'      => 'nullable|string',
+            'visi_misi'   => 'nullable|string',
+            'kurikulum'   => 'nullable|string',
+            'dosen'       => 'nullable|string',
+            'dokumen'     => 'nullable|string',
         ]);
 
+        // 2. Generate slug otomatis dari nama prodi (Contoh: S2 - Manajemen -> s2-manajemen)
+        $data['slug'] = Str::slug($request->nama);
+
+        // 3. Masukkan ke database
         ProgramStudi::create($data);
-        return back()->with('success', 'Program Studi baru berhasil ditambahkan.');
+        return back()->with('success', 'Program Studi baru beserta rincian halaman detail berhasil disimpan.');
     }
 
     public function updateProdi(Request $request, $id)
     {
+        // 1. Validasi inputan edit prodi
         $data = $request->validate([
-            'nama' => 'required|string|max:255',
-            'icon' => 'required|string',
+            'nama'        => 'required|string|max:255',
+            'icon'        => 'required|string',
             'search_tags' => 'required|string',
-            'deskripsi' => 'required|string',
+            'deskripsi'   => 'required|string',
+            'profil'      => 'nullable|string',
+            'visi_misi'   => 'nullable|string',
+            'kurikulum'   => 'nullable|string',
+            'dosen'       => 'nullable|string',
+            'dokumen'     => 'nullable|string',
         ]);
 
+        // 2. Regenerate slug kalau semisal nama prodinya ikut diubah
+        $data['slug'] = Str::slug($request->nama);
+
+        // 3. Update data berdasarkan ID prodi
         ProgramStudi::findOrFail($id)->update($data);
-        return back()->with('success', 'Data Program Studi berhasil diperbarui.');
+        return back()->with('success', 'Data rincian detail Program Studi berhasil diperbarui.');
     }
 
     public function destroyProdi($id)
@@ -229,15 +233,6 @@ class AdminController extends Controller
         }
         $gb->delete();
         return back()->with('success', 'Data Guru Besar berhasil dihapus dari sistem.');
-    }
-
-    // =========================================================================
-    // KONTROL MODUL: BERITA HUB SYSTEM
-    // =========================================================================
-    public function beritaAdmin()
-    {
-        $berita = Berita::latest()->get();
-        return view('admin.berita', compact('berita'));
     }
 
     public function storeBerita(Request $request)
@@ -583,4 +578,107 @@ class AdminController extends Controller
         $galeri->delete();
         return back()->with('success', 'Foto Galeri berhasil dihapus permanen.');
     }
+
+    // (Fungsi index Dashboard tetap biarkan seperti semula)
+    public function index()
+    {
+        $prodi = ProgramStudi::all();
+        $berita = Berita::latest()->get();
+        $alumni = Alumni::all();
+        $dokumen = Dokumen::all();
+        return view('admin.dashboard', compact('prodi', 'berita', 'alumni', 'dokumen'));
+    }
+
+    // =========================================================================
+    // FUNGSI PANGGILAN HALAMAN (VIEWS) YANG SUDAH DIPECAH MODULAR
+    // =========================================================================
+
+    // 1. Pengaturan Teks & Parameter
+    public function pengaturanAdmin()
+    {
+        $settings = [];
+        if (File::exists(storage_path('app/settings.json'))) {
+            $settings = json_decode(File::get(storage_path('app/settings.json')), true);
+        }
+        return view('admin.pengaturan', compact('settings'));
+    }
+
+    // 2. Banner Hero Slider
+    public function sliderAdmin()
+    {
+        $sliders = HeroSlider::all();
+        return view('admin.slider', compact('sliders'));
+    }
+
+    // 3. Visi & Profil
+    public function visiAdmin()
+    {
+        $visiData = VisiPendidikan::all();
+        return view('admin.visi', compact('visiData'));
+    }
+
+    // 4. Program Studi
+    public function prodiAdmin()
+    {
+        $prodi = ProgramStudi::all();
+        return view('admin.prodi', compact('prodi'));
+    }
+
+    // 5. Guru Besar
+    public function guruBesarAdmin()
+    {
+        $gurubesar = GuruBesar::all();
+        return view('admin.gurubesar', compact('gurubesar'));
+    }
+
+    // 6. Berita (Ini sudah ada, biarkan saja atau timpa ini)
+    public function beritaAdmin()
+    {
+        $berita = Berita::latest()->get();
+        return view('admin.berita', compact('berita'));
+    }
+
+    // 7. Dokumen Unduhan
+    public function dokumenAdmin()
+    {
+        $dokumens = Dokumen::latest()->get();
+        return view('admin.dokumen', compact('dokumens'));
+    }
+
+    // 8. Galeri
+    public function galeriAdmin()
+    {
+        $galeris = Galeri::latest()->get();
+        return view('admin.galeri', compact('galeris'));
+    }
+
+    // 9. Alumni
+    public function alumniAdmin()
+    {
+        $alumnis = Alumni::latest()->get();
+        return view('admin.alumni', compact('alumnis'));
+    }
+
+    // 10. Seminar
+    public function seminarAdmin()
+    {
+        $seminars = Seminar::latest()->get();
+        return view('admin.seminar', compact('seminars'));
+    }
+
+    // 11. Penelitian
+    public function penelitianAdmin()
+    {
+        $penat = Penelitian::latest()->get();
+        return view('admin.penelitian', compact('penat'));
+    }
+
+    // 12. FAQ
+    public function faqAdmin()
+    {
+        $faqs = Faq::latest()->get();
+        return view('admin.faq', compact('faqs'));
+    }
+
+    // (CATATAN: Biarkan fungsi-fungsi POST/PUT/DELETE seperti storeProdi, destroyProdi, dll di bawahnya tetap ada. Jangan dihapus!)
 }

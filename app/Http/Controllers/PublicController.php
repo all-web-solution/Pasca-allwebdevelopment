@@ -97,7 +97,12 @@ class PublicController extends Controller
         $prodi = ProgramStudi::all();
         $gurubesar = GuruBesar::all();
         $visi = VisiPendidikan::first();
-        return view('public.pendidikan', compact('sliders', 'prodi', 'gurubesar', 'visi'));
+
+        // TAMBAHKAN BARIS INI BIAR DATA BERITA IKUT KEBAWA KE HALAMAN PENDIDIKAN
+        $berita = Berita::latest()->get();
+
+        // JANGAN LUPA TAMBAHKAN 'berita' DI DALAM COMPACT
+        return view('public.pendidikan', compact('sliders', 'prodi', 'gurubesar', 'visi', 'berita'));
     }
 
     // =========================================================================
@@ -109,5 +114,18 @@ class PublicController extends Controller
         $seminar = Seminar::latest()->get();
         $penelitian = Penelitian::latest()->get();
         return view('public.penelitian', compact('sliders', 'seminar', 'penelitian'));
+    }
+
+    // =========================================================================
+    // HALAMAN DETAIL PROGRAM STUDI DINAMIS (YANG TADI ILANG)
+    // =========================================================================
+    public function prodiDetail($slug)
+    {
+        $sliders = HeroSlider::all();
+
+        // Cari prodi berdasarkan slug yang diklik di URL, kalau nggak ada lempar 404
+        $prodi = ProgramStudi::where('slug', $slug)->firstOrFail();
+
+        return view('public.prodi-detail', compact('sliders', 'prodi'));
     }
 }

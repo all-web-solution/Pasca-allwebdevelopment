@@ -59,13 +59,36 @@
         nav { position: fixed; top: 20px; left: 5%; width: 90%; display: flex; justify-content: space-between; align-items: center; padding: 16px 4%; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 50px; border: 1px solid rgba(255, 255, 255, 0.3); z-index: 1000; transition: var(--transition); }
         [data-theme="dark"] nav { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); }
         nav.scrolled { top: 0; left: 0; width: 100%; border-radius: 0; background: var(--primary); border: none; }
-        nav.scrolled .logo h1, nav.scrolled .nav-links a, nav.scrolled .action-btn i { color: #ffffff; }
+        nav.scrolled .logo h1, nav.scrolled .nav-links > li > a, nav.scrolled .action-btn i { color: #ffffff; }
         .logo h1 { font-size: 1.25rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
-        /* FIX: Menghapus position: relative di nav-right agar nav-links bisa melebar seukuran navbar */
         .nav-right { display: flex; align-items: center; gap: 24px; }
-        .nav-links { display: flex; list-style: none; gap: 28px; transition: var(--transition); }
+        .nav-links { display: flex; list-style: none; gap: 28px; transition: var(--transition); align-items: center; }
         .nav-links a { text-decoration: none; color: var(--dark); font-weight: 600; font-size: 0.95rem; transition: var(--transition); }
         .nav-links a:hover { color: var(--accent); }
+        
+        /* --- DROPDOWN MENU PRODI --- */
+        .dropdown { position: relative; }
+        .dropdown .fa-chevron-down { font-size: 0.75rem; margin-left: 4px; transition: transform 0.3s; }
+        .dropdown:hover .fa-chevron-down { transform: rotate(180deg); }
+        .dropdown-menu {
+            position: absolute; top: 100%; left: 0; background: #ffffff;
+            min-width: 260px; box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border-radius: 16px; padding: 12px 0; opacity: 0; pointer-events: none;
+            transform: translateY(15px); transition: all 0.3s ease; display: flex; flex-direction: column;
+            border: 1px solid rgba(0,0,0,0.05); z-index: 1000;
+        }
+        .dropdown:hover .dropdown-menu { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .dropdown-menu li { list-style: none; margin: 0; padding: 0; }
+        .dropdown-menu li a { 
+            display: block; padding: 12px 24px; color: var(--dark) !important; 
+            font-weight: 600; font-size: 0.9rem; transition: var(--transition);
+        }
+        .dropdown-menu li a:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary) !important; padding-left: 30px; }
+        
+        [data-theme="dark"] .dropdown-menu { background: var(--card-bg); border: 1px solid var(--card-border); }
+        [data-theme="dark"] .dropdown-menu li a { color: var(--light) !important; }
+        [data-theme="dark"] .dropdown-menu li a:hover { background: rgba(255,255,255,0.05); color: var(--accent) !important; }
+
         .action-btn { cursor: pointer; font-size: 1.2rem; color: var(--primary); transition: var(--transition); }
         .menu-toggle { display: none; flex-direction: column; gap: 6px; cursor: pointer; z-index: 1001; }
         .menu-toggle span { width: 24px; height: 2px; background: var(--primary); transition: var(--transition); border-radius: 2px; }
@@ -149,9 +172,9 @@
             .menu-toggle { display: flex; }
             .nav-links {
                 position: absolute; 
-                top: calc(100% + 15px); /* Turun sedikit dari bawah navbar */
+                top: calc(100% + 15px);
                 left: 0; 
-                width: 100%; /* Melebar 100% dari navbar */
+                width: 100%;
                 flex-direction: column; 
                 background: var(--card-bg);
                 backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
@@ -169,6 +192,16 @@
             .nav-links.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
             .nav-right { gap: 15px; }
             
+            nav.scrolled .nav-links.active > li > a,
+            nav.scrolled .nav-links.active .dropdown > a { color: var(--dark) !important; }
+            [data-theme="dark"] nav.scrolled .nav-links.active > li > a,
+            [data-theme="dark"] nav.scrolled .nav-links.active .dropdown > a { color: var(--light) !important; }
+
+            .dropdown-menu { position: static; box-shadow: none; opacity: 1; pointer-events: auto; transform: none; display: none; background: transparent; border: none; padding-left: 0; }
+            .dropdown:hover .dropdown-menu { display: flex; }
+            .dropdown-menu li a { justify-content: center; display: flex; }
+            .dropdown-menu li a:hover { padding-left: 0; transform: translateY(-2px); }
+
             /* Perbaikan Font di Mobile */
             .slide-content h2 { font-size: 2.2rem; }
             .badge-hero { font-size: 0.75rem; }
@@ -199,6 +232,22 @@
         <div class="nav-right">
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Beranda</a></li>
+                
+                <!-- MENU DROPDOWN PRODI DINAMIS DARI DATABASE -->
+                @php 
+                    $navProdis = \App\Models\ProgramStudi::all(); 
+                @endphp
+                <li class="dropdown">
+                    <a href="#" style="cursor: pointer;">Program Studi <i class="fa-solid fa-chevron-down"></i></a>
+                    <ul class="dropdown-menu">
+                        @foreach($navProdis as $np)
+                            <!-- Nge-link ke prodi-detail.blade.php pakai SLUG -->
+                            @php $safeSlug = $np->slug ? $np->slug : \Illuminate\Support\Str::slug($np->nama); @endphp
+                            <li><a href="{{ route('public.prodi-detail', $safeSlug) }}">{{ $np->nama }}</a></li>
+                        @endforeach
+                    </ul>
+                </li>
+
                 <li><a href="{{ route('public.pendidikan') }}">Pendidikan</a></li>
                 <li><a href="{{ route('public.penelitian') }}">Penelitian</a></li>
                 <li><a href="{{ route('public.alumni') }}">Alumni</a></li>
