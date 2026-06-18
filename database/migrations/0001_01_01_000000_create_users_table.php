@@ -14,9 +14,15 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('username')->unique(); // Tempat menyimpan NIM / NIDN
+            $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('password');
+
+            // TAMBAHAN UNTUK ROLE
+            $table->enum('role', ['superadmin', 'admin_pasca', 'admin_prodi'])->default('admin_prodi');
+            // Jika dia admin prodi, dia pegang prodi mana?
+
+
             $table->rememberToken();
             $table->timestamps();
         });

@@ -93,7 +93,6 @@
     /* ================================================================= */
     /* UI FIX: PROGRAM STUDI RESPONSIVE MASONRY GRID */
     /* ================================================================= */
-    /* Menghapus asimetris yang bikin berantakan, diganti dengan Grid rapi */
     .prodi-bento-grid { 
         display: grid; 
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
@@ -107,7 +106,6 @@
     }
     .prodi-bento-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: 0 25px 50px rgba(0,0,0,0.1); z-index: 10; }
 
-    /* Pengaturan Tema Warna Card (Siklus 3 Warna) */
     .theme-green { background: var(--primary); color: white; }
     .theme-yellow { background: var(--yellow-accent); color: var(--dark); }
     .theme-teal { background: var(--teal-accent); color: white; }
@@ -153,11 +151,15 @@
     .img-wrapper-large { width: 100%; height: 350px; overflow: hidden; position: relative; }
     .news-feat-img { width: 100%; height: 100%; background-size: cover; background-position: center; transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
     .news-feat-card:hover .news-feat-img { transform: scale(1.08); }
+    
+    /* LABEL BERITA IDENTITAS (PASCA/PRODI) */
     .badge-label {
-        position: absolute; top: 24px; left: 24px; padding: 8px 16px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; z-index: 10; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        position: absolute; top: 24px; left: 24px; padding: 8px 16px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; z-index: 10; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: white;
     }
-    .badge-label.green { background: rgba(10, 77, 46, 0.9); color: white; }
-    .badge-label.yellow { background: rgba(245, 158, 11, 0.9); color: white; }
+    .badge-label.pasca { background: rgba(10, 77, 46, 0.9); }
+    .badge-label.prodi { background: rgba(59, 130, 246, 0.9); }
+    .badge-label.yellow { background: rgba(245, 158, 11, 0.9); }
+
     .news-feat-content { padding: 35px; flex-grow: 1; display: flex; flex-direction: column; }
     .news-date { font-size: 0.85rem; color: var(--gray); margin-bottom: 12px; display: block; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .news-feat-content h3 { font-size: 1.6rem; font-weight: 800; line-height: 1.35; margin-bottom: 15px; color: var(--dark); transition: var(--smooth-transition); }
@@ -170,12 +172,16 @@
     }
     .news-list-item:hover { transform: translateX(-8px); box-shadow: var(--card-shadow-hover); border-color: var(--primary-light); }
     .news-list-content { flex: 1; }
+    
     .news-list-content .badge-inline {
-        display: inline-block; background: var(--primary-light); color: var(--primary); padding: 5px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; margin-bottom: 10px; margin-right: 12px; letter-spacing: 0.5px;
+        display: inline-block; padding: 5px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; margin-bottom: 10px; margin-right: 12px; letter-spacing: 0.5px; color: white;
     }
+    .news-list-content .badge-inline.pasca { background: var(--primary); }
+    .news-list-content .badge-inline.prodi { background: #3B82F6; }
+
     .news-list-content h4 { font-size: 1.15rem; font-weight: 700; line-height: 1.4; color: var(--dark); transition: color 0.3s ease; }
     .news-list-item:hover .news-list-content h4 { color: var(--primary); }
-    .list-img-wrapper { width: 130px; height: 130px; border-radius: 14px; overflow: hidden; flex-shrink: 0; }
+    .list-img-wrapper { width: 130px; height: 130px; border-radius: 14px; overflow: hidden; flex-shrink: 0; position: relative; }
     .news-list-thumb { width: 100%; height: 100%; background-size: cover; background-position: center; transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
     .news-list-item:hover .news-list-thumb { transform: scale(1.1); }
 
@@ -298,7 +304,6 @@
         <div class="prodi-bento-grid" id="prodiContainer">
             @foreach ($prodi as $index => $p)
                 @php
-                    // MURNI ROTASI TIGA WARNA
                     $themeClass = ''; 
                     $mod = $index % 3;
                     if ($mod == 0) { $themeClass = 'theme-green'; } 
@@ -306,8 +311,7 @@
                     else { $themeClass = 'theme-teal'; }
                 @endphp
 
-                <!-- Hapus class span asimetris agar semua kartu auto-responsive mengikuti lebar konten -->
-                <a href="#" class="prodi-bento-card {{ $themeClass }}" data-search="{{ $p->search_tags }}" onclick="event.preventDefault(); showToast('Membuka rincian prodi {{ $p->nama }}');">
+                <a href="{{ route('public.prodi-detail', $p->slug) }}" class="prodi-bento-card {{ $themeClass }}" data-search="{{ $p->search_tags }}">
                     <i class="fa-solid {{ $p->icon }} bento-watermark"></i>
                     <div class="bento-icon-small"><i class="fa-solid {{ $p->icon }}"></i></div>
                     <div class="bento-content">
@@ -346,7 +350,8 @@
                 <h2>Berita & Update <span>Terkini</span></h2>
                 <p>Informasi dan liputan kegiatan terbaru dari kampus Pascasarjana</p>
             </div>
-            <a href="#" class="btn-view-all">Semua Berita <i class="fa-solid fa-arrow-right"></i></a>
+            <!-- LINK KE HALAMAN FILTER BERITA PUBLIC -->
+            <a href="{{ route('public.berita.index') }}" class="btn-view-all">Semua Berita <i class="fa-solid fa-arrow-right"></i></a>
         </div>
 
         <div class="news-magazine-grid">
@@ -354,7 +359,13 @@
             <div class="news-feat-card trigger-modal-news" data-judul="{{ $beritaAkademik[0]->judul }}" data-konten="{{ $beritaAkademik[0]->konten }}">
                 <div class="img-wrapper-large">
                     <div class="news-feat-img" style="background-image: url('{{ asset('img/' . $beritaAkademik[0]->cover) }}');"></div>
-                    <span class="badge-label green">BERITA</span>
+                    
+                    <!-- IMPLEMENTASI LOGIKA LEVEL PASCA/PRODI DI CARD BESAR -->
+                    @if($beritaAkademik[0]->level === 'pasca')
+                        <span class="badge-label pasca"><i class="fa-solid fa-building-columns"></i> BERITA PASCASARJANA</span>
+                    @else
+                        <span class="badge-label prodi"><i class="fa-solid fa-graduation-cap"></i> BERITA {{ strtoupper($beritaAkademik[0]->prodi->nama ?? 'PRODI') }}</span>
+                    @endif
                 </div>
                 <div class="news-feat-content">
                     <span class="news-date">{{ $beritaAkademik[0]->created_at->format('d M Y') }}</span>
@@ -371,7 +382,12 @@
                     <div class="news-list-item trigger-modal-news" data-judul="{{ $beritaAkademik[$i]->judul }}" data-konten="{{ $beritaAkademik[$i]->konten }}">
                         <div class="news-list-content">
                             <div>
-                                <span class="badge-inline">BERITA</span>
+                                <!-- IMPLEMENTASI LOGIKA LEVEL PASCA/PRODI DI LIST KECIL -->
+                                @if($beritaAkademik[$i]->level === 'pasca')
+                                    <span class="badge-inline pasca"><i class="fa-solid fa-building-columns"></i> PASCA</span>
+                                @else
+                                    <span class="badge-inline prodi"><i class="fa-solid fa-graduation-cap"></i> {{ strtoupper($beritaAkademik[$i]->prodi->nama ?? 'PRODI') }}</span>
+                                @endif
                                 <span class="news-date" style="display:inline; font-size:0.8rem;">{{ $beritaAkademik[$i]->created_at->format('d M Y') }}</span>
                             </div>
                             <h4>{{ Str::limit($beritaAkademik[$i]->judul, 65) }}</h4>
@@ -397,7 +413,8 @@
                 <h2>Pengumuman <span>Terbaru</span></h2>
                 <p>Informasi resmi, edaran, dan agenda dari administrasi kampus</p>
             </div>
-            <a href="#" class="btn-view-all" style="background: var(--dark);">Semua Pengumuman <i class="fa-solid fa-arrow-right"></i></a>
+            <!-- LINK KE HALAMAN FILTER BERITA PUBLIC -->
+            <a href="{{ route('public.berita.index') }}" class="btn-view-all" style="background: var(--dark);">Semua Pengumuman <i class="fa-solid fa-arrow-right"></i></a>
         </div>
 
         <div class="announcement-grid">
@@ -425,14 +442,14 @@
 
     <!-- SEKSI KONTAK FORM -->
     <section id="contact">
-        <div class="section-header">
-            <h2>Kanal Komunikasi Instan</h2>
-            <p>Hubungi sekretariat administrasi layanan pascasarjana secara langsung</p>
+        <div class="section-header" style="text-align: center; margin-bottom: 40px;">
+            <h2 style="font-size: 2.5rem; font-weight: 800; color: var(--dark);">Kanal Komunikasi Instan</h2>
+            <p style="color: var(--gray);">Hubungi sekretariat administrasi layanan pascasarjana secara langsung</p>
         </div>
         <div style="max-width: 650px; margin: 0 auto;">
             <form id="interactiveForm" style="display: flex; flex-direction: column; gap: 20px; background: white; padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--card-shadow); border: 1px solid rgba(0,0,0,0.03);">
-                <input type="text" id="senderName" placeholder="Nama Lengkap Anda" style="padding: 18px; border-radius: 12px; border: 1px solid var(--card-border); background: var(--light); color: var(--dark); font-size: 1rem; outline: none; transition: var(--smooth-transition);" required>
-                <textarea id="senderMsg" rows="5" placeholder="Tulis rincian pesan atau pertanyaan konsultasi prodi..." style="padding: 18px; border-radius: 12px; border: 1px solid var(--card-border); background: var(--light); color: var(--dark); font-size: 1rem; outline: none; transition: var(--smooth-transition);" required></textarea>
+                <input type="text" id="senderName" placeholder="Nama Lengkap Anda" style="padding: 18px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--light); color: var(--dark); font-size: 1rem; outline: none; transition: var(--smooth-transition);" required>
+                <textarea id="senderMsg" rows="5" placeholder="Tulis rincian pesan atau pertanyaan konsultasi prodi..." style="padding: 18px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--light); color: var(--dark); font-size: 1rem; outline: none; transition: var(--smooth-transition);" required></textarea>
                 <button type="submit" class="btn-modern" style="justify-content: center; color: white; background: var(--primary); padding: 18px; font-size: 1.05rem;">Kirim Enkripsi Pesan <i class="fa-solid fa-paper-plane" style="margin-left: 8px;"></i></button>
             </form>
         </div>
@@ -466,7 +483,7 @@
     const inputs = document.querySelectorAll('input[type="text"], textarea');
     inputs.forEach(input => {
         input.addEventListener('focus', () => input.style.borderColor = 'var(--primary)');
-        input.addEventListener('blur', () => input.style.borderColor = 'var(--card-border)');
+        input.addEventListener('blur', () => input.style.borderColor = 'var(--border-color)');
     });
 
     // Live Search Prodi
@@ -504,7 +521,7 @@
         document.getElementById('newsModal').classList.remove('active');
     }
 
-    // ENGINE STATS COUNTER MODERN (Dengan Tanda Plus Kuning)
+    // ENGINE STATS COUNTER MODERN
     const counters = document.querySelectorAll('.counter');
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
@@ -515,7 +532,6 @@
                     const step = () => {
                         if(current < target) {
                             current += Math.ceil(target / 30);
-                            // Menginjeksikan span HTML untuk mewarnai tanda '+' jadi kuning
                             c.innerHTML = current > target ? target + "<span style='color: var(--yellow-accent); margin-left: 4px;'>+</span>" : current + "<span style='color: var(--yellow-accent); margin-left: 4px;'>+</span>";
                             setTimeout(step, 30);
                         }

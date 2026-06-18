@@ -16,6 +16,7 @@ use App\Models\Galeri;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str; // <-- Wajib ada untuk generate slug otomatis
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -187,18 +188,23 @@ class AdminController extends Controller
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048'
         ]);
 
+        $user = Auth::user();
+        if ($user->role === 'admin_prodi') {
+            $data['prodi_id'] = $user->prodi_id;
+        } else {
+            $data['prodi_id'] = $request->prodi_id; // Admin Pasca bisa masukin dosen ke prodi tertentu
+        }
+
+        // Script Upload Foto seperti biasa...
         if ($request->hasFile('foto')) {
             $imageName = time() . '.' . $request->foto->extension();
             $request->foto->move(public_path('img/prof'), $imageName);
             $data['foto'] = $imageName;
-        } else {
-            $data['foto'] = 'default-prof.png';
         }
 
         GuruBesar::create($data);
-        return back()->with('success', 'Data Guru Besar berhasil ditambahkan.');
+        return back()->with('success', 'Data Dosen/Guru Besar berhasil ditambahkan.');
     }
-
     public function updateGuruBesar(Request $request, $id)
     {
         $data = $request->validate([
@@ -235,26 +241,7 @@ class AdminController extends Controller
         return back()->with('success', 'Data Guru Besar berhasil dihapus dari sistem.');
     }
 
-    public function storeBerita(Request $request)
-    {
-        $data = $request->validate([
-            'judul' => 'required|string|max:255',
-            'kategori' => 'required|string',
-            'konten' => 'required|string',
-            'cover' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048'
-        ]);
 
-        if ($request->hasFile('cover')) {
-            $imageName = time() . '.' . $request->cover->extension();
-            $request->cover->move(public_path('img'), $imageName);
-            $data['cover'] = $imageName;
-        } else {
-            $data['cover'] = 'news1.jpeg';
-        }
-
-        Berita::create($data);
-        return back()->with('success', 'Berita baru berhasil diterbitkan.');
-    }
 
     public function updateBerita(Request $request, $id)
     {
@@ -617,25 +604,29 @@ class AdminController extends Controller
         return view('admin.visi', compact('visiData'));
     }
 
-    // 4. Program Studi
     public function prodiAdmin()
     {
-        $prodi = ProgramStudi::all();
+        $user = Auth::user();
+        if ($user->role === 'admin_prodi') {
+            // Admin Prodi cuma lihat/edit Prodi dia sendiri
+            $prodi = ProgramStudi::where('id', $user->prodi_id)->get();
+        } else {
+            $prodi = ProgramStudi::all();
+        }
         return view('admin.prodi', compact('prodi'));
     }
 
-    // 5. Guru Besar
     public function guruBesarAdmin()
     {
-        $gurubesar = GuruBesar::all();
-        return view('admin.gurubesar', compact('gurubesar'));
-    }
+        $user = Auth::user();
+        if ($user->role === 'admin_prodi') {
+            $gurubesar = GuruBesar::where('prodi_id', $user->prodi_id)->latest()->get();
+        } else {
+            $gurubesar = GuruBesar::latest()->get();
+        }
 
-    // 6. Berita (Ini sudah ada, biarkan saja atau timpa ini)
-    public function beritaAdmin()
-    {
-        $berita = Berita::latest()->get();
-        return view('admin.berita', compact('berita'));
+        $semuaProdi = ProgramStudi::all(); // Untuk dropdown select di form
+        return view('admin.gurubesar', compact('gurubesar', 'semuaProdi'));
     }
 
     // 7. Dokumen Unduhan
@@ -680,5 +671,50 @@ class AdminController extends Controller
         return view('admin.faq', compact('faqs'));
     }
 
+    public function beritaAdmin()
+    {
+        $user = Auth::user();
+
+        if ($user->role === 'admin_prodi') {
+            // Admin prodi cuma bisa lihat berita prodinya sendiri
+            $berita = Berita::where('prodi_id', $user->prodi_id)->latest()->get();
+        } else {
+            // Superadmin & Admin Pasca bisa lihat semua berita
+            $berita = Berita::latest()->get();
+        }
+
+        return view('admin.berita', compact('berita'));
+    }
+    public function storeBerita(Request $request)
+    {
+        $data = $request->validate([
+            'judul' => 'required|string|max:255',
+            'kategori' => 'required|string',
+            'konten' => 'required|string',
+            'cover' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048'
+        ]);
+
+        $user = Auth::user();
+
+        // Auto-assign level & prodi berdasarkan Role
+        if ($user->role === 'admin_prodi') {
+            $data['level'] = 'prodi';
+            $data['prodi_id'] = $user->prodi_id;
+        } else {
+            $data['level'] = $request->level ?? 'pasca';
+            $data['prodi_id'] = $request->prodi_id ?? null;
+        }
+
+        if ($request->hasFile('cover')) {
+            $imageName = time() . '.' . $request->cover->extension();
+            $request->cover->move(public_path('img'), $imageName);
+            $data['cover'] = $imageName;
+        }
+
+        Berita::create($data);
+        return back()->with('success', 'Berita berhasil diterbitkan.');
+    }
+
     // (CATATAN: Biarkan fungsi-fungsi POST/PUT/DELETE seperti storeProdi, destroyProdi, dll di bawahnya tetap ada. Jangan dihapus!)
+
 }

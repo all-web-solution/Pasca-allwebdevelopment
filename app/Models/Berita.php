@@ -8,5 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Berita extends Model
 {
     use HasFactory;
-    protected $fillable = ['judul', 'kategori', 'cover', 'konten'];
+    protected $fillable = ['judul', 'kategori', 'cover', 'konten', 'level', 'prodi_id'];
+
+    public function prodi()
+    {
+        return $this->belongsTo(ProgramStudi::class, 'prodi_id');
+    }
 }

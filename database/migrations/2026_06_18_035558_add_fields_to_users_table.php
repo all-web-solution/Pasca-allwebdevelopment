@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('beritas', function (Blueprint $table) {
-            $table->id();
-            $table->string('judul');
-            $table->string('kategori'); // 'akademik' atau 'pengumuman'
-            $table->string('cover')->nullable();
-            $table->text('konten');
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            $table->foreignId('prodi_id')->nullable()->constrained('program_studis')->onDelete('set null')->after('role');
         });
     }
 
@@ -26,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('beritas');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['prodi_id']);
+        });
     }
 };

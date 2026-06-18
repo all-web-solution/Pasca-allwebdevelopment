@@ -4,49 +4,84 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\User;
-use App\Models\Berita;
-use App\Models\GuruBesar;
-use App\Models\VisiPendidikan;
+use App\Models\HeroSlider;
 use App\Models\Alumni;
 use App\Models\Dokumen;
-use App\Models\Penelitian;
-use App\Models\HeroSlider;
 use App\Models\Seminar;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Penelitian;
+use App\Models\VisiPendidikan;
+use App\Models\ProgramStudi;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // Memanggil KontenWebSeeder dengan sintaks yang benar agar tidak error
-        // Perbaikan syntax: Wajib dibungkus array [] dan panggil dengan ::class
+        // 1. PANGGIL KONTEN WEB SEEDER DULUAN
         $this->call([
             KontenWebSeeder::class,
         ]);
 
         // =========================================================================
-        // 1. DATA AKUN ADMINISTRATOR UTAMA (SINKRON DENGAN FIELD USERNAME KAMPUS)
+        // 2. DATA AKUN ADMINISTRATOR DENGAN FORMAT USERNAME NIP/NIDN (ANGKA)
         // =========================================================================
+
+        // Akun 1: SUPER ADMIN
         User::updateOrCreate(
             ['email' => 'admin@iaincurup.ac.id'],
             [
                 'name' => 'Super Admin Pascasarjana',
-                'username' => '198706122026041001', // Contoh NIDN / username unik bawaan migration kamu
+                'username' => '198706122026041001',
                 'password' => Hash::make('password'),
+                'role' => 'superadmin',
+                'prodi_id' => null,
             ]
         );
 
-        // Note: Data ProgramStudi & GuruBesar tidak di-seed di sini lagi karena sudah di-handle 
-        // secara lengkap dan banyak di dalam KontenWebSeeder di atas agar tidak terjadi duplikasi.
+        // Akun 2: ADMIN PASCA (Pusat)
+        User::updateOrCreate(
+            ['email' => 'pasca@iaincurup.ac.id'],
+            [
+                'name' => 'Admin Sentral Pasca',
+                'username' => '198706122026041002',
+                'password' => Hash::make('password'),
+                'role' => 'admin_pasca',
+                'prodi_id' => null,
+            ]
+        );
+
+        // Akun 3: ADMIN PRODI PAI
+        $prodiPAI = ProgramStudi::where('slug', 'like', '%pai%')->first();
+        if ($prodiPAI) {
+            User::updateOrCreate(
+                ['email' => 'pai@iaincurup.ac.id'],
+                [
+                    'name' => 'Admin Kaprodi PAI',
+                    'username' => '198706122026041003',
+                    'password' => Hash::make('password'),
+                    'role' => 'admin_prodi',
+                    'prodi_id' => $prodiPAI->id,
+                ]
+            );
+        }
+
+        // Akun 4: ADMIN PRODI MPI
+        $prodiMPI = ProgramStudi::where('slug', 'like', '%mpi%')->first();
+        if ($prodiMPI) {
+            User::updateOrCreate(
+                ['email' => 'mpi@iaincurup.ac.id'],
+                [
+                    'name' => 'Admin Kaprodi MPI',
+                    'username' => '198706122026041004',
+                    'password' => Hash::make('password'),
+                    'role' => 'admin_prodi',
+                    'prodi_id' => $prodiMPI->id,
+                ]
+            );
+        }
 
         // =========================================================================
-        // 2. DATA BANNER HERO SLIDER (BERANDA)
+        // DATA SEEDER LAINNYA
         // =========================================================================
         HeroSlider::truncate();
         HeroSlider::insert([
@@ -70,9 +105,6 @@ class DatabaseSeeder extends Seeder
             ]
         ]);
 
-        // =========================================================================
-        // 3. DATA REKAM JEJAK & TESTIMONI ALUMNI
-        // =========================================================================
         Alumni::truncate();
         Alumni::insert([
             [
@@ -86,9 +118,6 @@ class DatabaseSeeder extends Seeder
             ]
         ]);
 
-        // =========================================================================
-        // 4. DATA ARSIPS BERKAS DOKUMEN UNDUHAN
-        // =========================================================================
         Dokumen::truncate();
         Dokumen::insert([
             [
@@ -117,9 +146,6 @@ class DatabaseSeeder extends Seeder
             ]
         ]);
 
-        // =========================================================================
-        // 5. DATA AGENDA SEMINAR & KOLOKIUM
-        // =========================================================================
         Seminar::truncate();
         Seminar::insert([
             [
@@ -132,9 +158,6 @@ class DatabaseSeeder extends Seeder
             ]
         ]);
 
-        // =========================================================================
-        // 6. DATA REPOSITORI PUBLIKASI PENELITIAN JURNAL
-        // =========================================================================
         Penelitian::truncate();
         Penelitian::insert([
             [
@@ -148,9 +171,6 @@ class DatabaseSeeder extends Seeder
             ]
         ]);
 
-        // =========================================================================
-        // 7. DATA KONTROL PROFIL PENDIDIKAN (VISI & BACKGROUND)
-        // =========================================================================
         VisiPendidikan::truncate();
         VisiPendidikan::create([
             'judul_visi' => 'Visi & Misi Pascasarjana',

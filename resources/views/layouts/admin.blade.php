@@ -53,8 +53,9 @@
         .avatar-wrapper { width: 48px; height: 48px; border-radius: 10px; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; flex-shrink: 0; }
         [data-theme="dark"] .avatar-wrapper { color: var(--accent); }
         .identity-text { overflow: hidden; }
-        .identity-text h4 { font-size: 0.95rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .identity-text span { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+        .identity-text h4 { font-size: 0.95rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--dark); }
+        [data-theme="dark"] .identity-text h4 { color: #ffffff; }
+        .identity-text span { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; text-transform: capitalize; }
         
         .sidebar-navigation-menu { padding: 24px 16px; list-style: none; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
         .sidebar-navigation-menu::-webkit-scrollbar { width: 5px; }
@@ -123,23 +124,12 @@
         /* RESPONSIVE MEDIA QUERIES UTAMA (TABLET & MOBILE) */
         /* ========================================================================= */
         @media (max-width: 992px) {
-            /* Sembunyikan Sidebar Kiri (Off-Canvas) */
             aside.main-admin-sidebar { transform: translateX(-100%); }
             aside.main-admin-sidebar.show { transform: translateX(0); }
-            
-            /* Tarik Konten Utama Ke Kiri */
             .admin-viewport { margin-left: 0; }
-            
-            /* Munculkan Tombol Hamburger */
             .mobile-menu-toggle { display: block; }
-            
-            /* Padding Header lebih padat */
             header.admin-navbar { padding: 0 20px; }
-            
-            /* Padding Body menyesuaikan layar kecil */
             .admin-page-body { padding: 25px 20px; }
-            
-            /* Table Data scrollable smooth */
             .card-panel-heading { flex-direction: column; align-items: flex-start; }
         }
 
@@ -157,29 +147,49 @@
 
     <aside class="main-admin-sidebar" id="mainSidebar">
         <div class="sidebar-identity">
-            <div class="avatar-wrapper"><i class="fa-solid fa-user-gear"></i></div>
+            <div class="avatar-wrapper">
+                @if(Auth::user()->role === 'superadmin')
+                    <i class="fa-solid fa-chess-king"></i>
+                @elseif(Auth::user()->role === 'admin_pasca')
+                    <i class="fa-solid fa-building-columns"></i>
+                @else
+                    <i class="fa-solid fa-user-gear"></i>
+                @endif
+            </div>
             <div class="identity-text">
-                <h4>Super Admin</h4>
-                <span>Administrator Panel</span>
+                <h4>{{ Auth::user()->name ?? 'Administrator' }}</h4>
+                <span>{{ str_replace('_', ' ', Auth::user()->role ?? 'Admin Panel') }}</span>
             </div>
         </div>
         <ul class="sidebar-navigation-menu">
-             <li class="menu-link-item {{ Request::is('admin/dashboard*') ? 'active' : '' }}">
+            
+            <!-- 1. BISA DIAKSES OLEH SEMUA ROLE (Superadmin, Pasca, Prodi) -->
+            <li class="menu-link-item {{ Request::is('admin/dashboard*') ? 'active' : '' }}">
                 <a href="{{ route('admin.dashboard') }}"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
             </li>
 
-            <li style="margin-top: 15px; padding-left: 16px; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); letter-spacing: 1px;">PENGATURAN BERANDA</li>
-            <li class="menu-link-item {{ Request::is('admin/pengaturan*') ? 'active' : '' }}">
-                <a href="{{ route('admin.pengaturan') }}"><i class="fa-solid fa-sliders"></i> Teks & Parameter Global</a>
-            </li>
-            <li class="menu-link-item {{ Request::is('admin/slider*') ? 'active' : '' }}">
-                <a href="{{ route('admin.slider') }}"><i class="fa-solid fa-images"></i> Banner Hero Slider</a>
-            </li>
+            <!-- 2. HANYA BISA DIAKSES OLEH SUPER ADMIN -->
+            @if(Auth::user()->role === 'superadmin')
+                <li style="margin-top: 15px; padding-left: 16px; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); letter-spacing: 1px;">PENGATURAN BERANDA</li>
+                <li class="menu-link-item {{ Request::is('admin/pengaturan*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.pengaturan') }}"><i class="fa-solid fa-sliders"></i> Teks & Parameter Global</a>
+                </li>
+                <li class="menu-link-item {{ Request::is('admin/slider*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.slider') }}"><i class="fa-solid fa-images"></i> Banner Hero Slider</a>
+                </li>
+            @endif
 
+            <!-- 3. MODUL AKADEMIK -->
             <li style="margin-top: 15px; padding-left: 16px; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); letter-spacing: 1px;">MODUL AKADEMIK</li>
-            <li class="menu-link-item {{ Request::is('admin/visi*') ? 'active' : '' }}">
-                <a href="{{ route('admin.visi') }}"><i class="fa-solid fa-bullseye"></i> Visi & Latar Belakang</a>
-            </li>
+            
+            <!-- Visi Pasca: Cuma Superadmin & Admin Pasca yang boleh ubah -->
+            @if(in_array(Auth::user()->role, ['superadmin', 'admin_pasca']))
+                <li class="menu-link-item {{ Request::is('admin/visi*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.visi') }}"><i class="fa-solid fa-bullseye"></i> Visi & Latar Belakang</a>
+                </li>
+            @endif
+
+            <!-- Prodi & Guru Besar: SEMUA ROLE BOLEH (Nanti logicnya dikunci di Controller) -->
             <li class="menu-link-item {{ Request::is('admin/prodi*') ? 'active' : '' }}">
                 <a href="{{ route('admin.prodi') }}"><i class="fa-solid fa-graduation-cap"></i> Program Studi</a>
             </li>
@@ -187,31 +197,40 @@
                 <a href="{{ route('admin.gurubesar') }}"><i class="fa-solid fa-user-tie"></i> Dewan Guru Besar</a>
             </li>
 
+            <!-- 4. ARSIP & MEDIA -->
             <li style="margin-top: 15px; padding-left: 16px; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); letter-spacing: 1px;">ARSIP & MEDIA</li>
+            
+            <!-- Berita: SEMUA ROLE BOLEH MENGISI BERITA -->
             <li class="menu-link-item {{ Request::is('admin/berita*') ? 'active' : '' }}">
                 <a href="{{ route('admin.berita') }}"><i class="fa-solid fa-newspaper"></i> Berita & Pengumuman</a>
             </li>
-            <li class="menu-link-item {{ Request::is('admin/dokumen*') ? 'active' : '' }}">
-                <a href="{{ route('admin.dokumen') }}"><i class="fa-solid fa-file-pdf"></i> Dokumen Unduhan</a>
-            </li>
-            <li class="menu-link-item {{ Request::is('admin/galeri*') ? 'active' : '' }}">
-                <a href="{{ route('admin.galeri') }}"><i class="fa-solid fa-camera-retro"></i> Galeri Kegiatan</a>
-            </li>
 
-            <li style="margin-top: 15px; padding-left: 16px; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); letter-spacing: 1px;">DATA & INTERAKSI</li>
-            <li class="menu-link-item {{ Request::is('admin/alumni*') ? 'active' : '' }}">
-                <a href="{{ route('admin.alumni') }}"><i class="fa-solid fa-user-graduate"></i> Rekam Data Alumni</a>
-            </li>
-            <li class="menu-link-item {{ Request::is('admin/seminar*') ? 'active' : '' }}">
-                <a href="{{ route('admin.seminar') }}"><i class="fa-solid fa-calendar-days"></i> Agenda Seminar</a>
-            </li>
-            <li class="menu-link-item {{ Request::is('admin/penelitian*') ? 'active' : '' }}">
-                <a href="{{ route('admin.penelitian') }}"><i class="fa-solid fa-book-bookmark"></i> Publikasi Penelitian</a>
-            </li>
-            <li class="menu-link-item {{ Request::is('admin/faq*') ? 'active' : '' }}">
-                <a href="{{ route('admin.faq') }}"><i class="fa-solid fa-circle-question"></i> Kelola FAQ</a>
-            </li>
+            <!-- Dokumen, Galeri, dan Modul Interaksi: HANYA SUPER ADMIN & ADMIN PASCA -->
+            @if(in_array(Auth::user()->role, ['superadmin', 'admin_pasca']))
+                <li class="menu-link-item {{ Request::is('admin/dokumen*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.dokumen') }}"><i class="fa-solid fa-file-pdf"></i> Dokumen Unduhan</a>
+                </li>
+                <li class="menu-link-item {{ Request::is('admin/galeri*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.galeri') }}"><i class="fa-solid fa-camera-retro"></i> Galeri Kegiatan</a>
+                </li>
 
+                <!-- 5. DATA & INTERAKSI -->
+                <li style="margin-top: 15px; padding-left: 16px; font-size: 0.75rem; font-weight: 800; color: var(--text-muted); letter-spacing: 1px;">DATA & INTERAKSI</li>
+                <li class="menu-link-item {{ Request::is('admin/alumni*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.alumni') }}"><i class="fa-solid fa-user-graduate"></i> Rekam Data Alumni</a>
+                </li>
+                <li class="menu-link-item {{ Request::is('admin/seminar*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.seminar') }}"><i class="fa-solid fa-calendar-days"></i> Agenda Seminar</a>
+                </li>
+                <li class="menu-link-item {{ Request::is('admin/penelitian*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.penelitian') }}"><i class="fa-solid fa-book-bookmark"></i> Publikasi Penelitian</a>
+                </li>
+                <li class="menu-link-item {{ Request::is('admin/faq*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.faq') }}"><i class="fa-solid fa-circle-question"></i> Kelola FAQ</a>
+                </li>
+            @endif
+
+            <!-- TOMBOL LOGOUT: DIAKSES OLEH SEMUA ROLE -->
             <li class="menu-link-item" style="margin-top: 30px;">
                 <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" style="color: #DC2626; background: rgba(220, 38, 38, 0.1);">
                     <i class="fa-solid fa-power-off"></i> Keluar Sistem
@@ -271,13 +290,11 @@
         const sidebarOverlay = document.getElementById('sidebarOverlay');
 
         if (mobileMenuBtn && mainSidebar && sidebarOverlay) {
-            // Saat Hamburger Menu Diklik
             mobileMenuBtn.addEventListener('click', () => {
                 mainSidebar.classList.add('show');
                 sidebarOverlay.classList.add('active');
             });
 
-            // Saat Area Luar Sidebar Diklik
             sidebarOverlay.addEventListener('click', () => {
                 mainSidebar.classList.remove('show');
                 sidebarOverlay.classList.remove('active');

@@ -40,19 +40,30 @@
                     @foreach($berita as $b)
                     <tr>
                         <td align="center"><div class="table-news-thumbnail" style="background-image: url('{{ asset('img/' . ($b->cover ?? 'news1.jpeg')) }}')"></div></td>
-                        <td><strong>{{ Str::limit($b->judul, 60) }}</strong></td>
+                        <td>
+                            <strong>{{ Str::limit($b->judul, 50) }}</strong>
+                            <div style="margin-top: 6px;">
+                                @if($b->level === 'pasca')
+                                    <span style="font-size: 0.7rem; background: var(--dark); color: white; padding: 3px 8px; border-radius: 4px;"><i class="fa-solid fa-building-columns"></i> Berita Pasca</span>
+                                @else
+                                    <span style="font-size: 0.7rem; background: #3B82F6; color: white; padding: 3px 8px; border-radius: 4px;"><i class="fa-solid fa-graduation-cap"></i> Berita {{ $b->prodi->nama ?? 'Prodi' }}</span>
+                                @endif
+                            </div>
+                        </td>
                         <td><span class="badge-status {{ $b->kategori == 'akademik' ? 'status-success' : 'status-warning' }}">{{ $b->kategori }}</span></td>
                         <td align="right">
                             <div class="action-row-buttons">
                                 <button class="btn-action-trigger edit-type btn-edit-berita" 
-                                        data-id="{{ $b->id }}" data-judul="{{ $b->judul }}" data-kategori="{{ $b->kategori }}" 
-                                        data-cover="{{ asset('img/' . ($b->cover ?? 'news1.jpeg')) }}" data-konten="{{ $b->konten }}">
+                                        data-id="{{ $b->id }}" 
+                                        data-judul="{{ $b->judul }}" 
+                                        data-kategori="{{ $b->kategori }}" 
+                                        data-cover="{{ asset('img/' . ($b->cover ?? 'news1.jpeg')) }}" 
+                                        data-konten="{{ $b->konten }}"
+                                        data-level="{{ $b->level }}"
+                                        data-prodi="{{ $b->prodi_id }}">
                                     <i class="fa-solid fa-pen"></i> Edit
                                 </button>
-                                <form action="{{ route('admin.berita.delete', $b->id) }}" method="POST" onsubmit="return confirm('Hapus berita ini?')" style="display:inline;">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-action-trigger delete-type"><i class="fa-solid fa-trash"></i></button>
-                                </form>
+                                <form action="{{ route('admin.berita.delete', $b->id) }}" method="POST" style="display:inline;">@csrf @method('DELETE') <button type="submit" class="btn-action-trigger delete-type" onclick="return confirm('Hapus berita ini secara permanen?')"><i class="fa-solid fa-trash"></i></button></form>
                             </div>
                         </td>
                     </tr>
@@ -62,12 +73,35 @@
         </div>
     </div>
 
+    <!-- MODAL CREATE BERITA -->
     <div class="admin-modal-overlay" id="modalCreateBerita">
         <div class="admin-modal-window">
             <span class="modal-close-trigger" onclick="closeModal('modalCreateBerita')">&times;</span>
             <h3 style="margin-bottom: 25px;"><i class="fa-solid fa-square-plus" style="color:var(--primary)"></i> Tulis Berita Baru</h3>
             <form action="{{ route('admin.berita.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
+                
+                <!-- KHUSUS SUPERADMIN & ADMIN PASCA: BISA MILIH BERITA INI PUNYA SIAPA -->
+                @if(Auth::user()->role !== 'admin_prodi')
+                <div class="form-flex-row">
+                    <div class="form-input-cell">
+                        <label>Level Identitas Berita</label>
+                        <select name="level" id="createLevelSelect" onchange="document.getElementById('createProdiBox').style.display = this.value === 'prodi' ? 'block' : 'none';">
+                            <option value="pasca">Berita Pascasarjana (Pusat)</option>
+                            <option value="prodi">Berita Program Studi</option>
+                        </select>
+                    </div>
+                    <div class="form-input-cell" id="createProdiBox" style="display:none;">
+                        <label>Pilih Prodi Pemilik Berita</label>
+                        <select name="prodi_id">
+                            @foreach(\App\Models\ProgramStudi::all() as $p)
+                                <option value="{{ $p->id }}">{{ $p->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                @endif
+
                 <div class="form-flex-row">
                     <div class="form-input-cell" style="flex: 2;">
                         <label>Judul Berita</label><input type="text" name="judul" required>
@@ -91,12 +125,35 @@
         </div>
     </div>
 
+    <!-- MODAL EDIT BERITA -->
     <div class="admin-modal-overlay" id="modalEditBerita">
         <div class="admin-modal-window">
             <span class="modal-close-trigger" onclick="closeModal('modalEditBerita')">&times;</span>
             <h3 style="margin-bottom: 25px;"><i class="fa-solid fa-pen-to-square" style="color:var(--primary)"></i> Edit Berita</h3>
             <form id="formEditBerita" method="POST" enctype="multipart/form-data">
                 @csrf @method('PUT')
+
+                <!-- KHUSUS SUPERADMIN & ADMIN PASCA: BISA UBAH IDENTITAS BERITA SAAT EDIT -->
+                @if(Auth::user()->role !== 'admin_prodi')
+                <div class="form-flex-row">
+                    <div class="form-input-cell">
+                        <label>Level Identitas Berita</label>
+                        <select name="level" id="editLevelSelect" onchange="document.getElementById('editProdiBox').style.display = this.value === 'prodi' ? 'block' : 'none';">
+                            <option value="pasca">Berita Pascasarjana (Pusat)</option>
+                            <option value="prodi">Berita Program Studi</option>
+                        </select>
+                    </div>
+                    <div class="form-input-cell" id="editProdiBox" style="display:none;">
+                        <label>Pilih Prodi Pemilik Berita</label>
+                        <select name="prodi_id" id="editProdiSelect">
+                            @foreach(\App\Models\ProgramStudi::all() as $p)
+                                <option value="{{ $p->id }}">{{ $p->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                @endif
+
                 <div class="form-flex-row">
                     <div class="form-input-cell" style="flex: 2;">
                         <label>Judul Berita</label><input type="text" id="editBeritaJudul" name="judul" required>
@@ -132,6 +189,24 @@
             document.getElementById('editBeritaJudul').value = this.getAttribute('data-judul');
             document.getElementById('editBeritaKategori').value = this.getAttribute('data-kategori');
             document.getElementById('editBeritaKonten').value = this.getAttribute('data-konten');
+            
+            // Logika untuk mengisi data Level & Prodi (Jika login sebagai Superadmin/Admin Pasca)
+            const levelSelect = document.getElementById('editLevelSelect');
+            const prodiBox = document.getElementById('editProdiBox');
+            const prodiSelect = document.getElementById('editProdiSelect');
+            
+            if (levelSelect) {
+                const level = this.getAttribute('data-level');
+                levelSelect.value = level;
+                
+                if (level === 'prodi') {
+                    prodiBox.style.display = 'block';
+                    prodiSelect.value = this.getAttribute('data-prodi');
+                } else {
+                    prodiBox.style.display = 'none';
+                }
+            }
+
             openModal('modalEditBerita');
         });
     });

@@ -21,13 +21,14 @@ class PublicController extends Controller
     // =========================================================================
     // MAIN HUB: HALAMAN BERANDA UTAMA (SINKRON DATA SEEDER & HERO)
     // =========================================================================
+
     public function beranda()
     {
         $sliders = HeroSlider::all();
         $prodi = ProgramStudi::all();
 
-        // Menarik semua data berita terbaru untuk slider berita horizontal
-        $berita = Berita::latest()->get();
+        // TAMBAHKAN with('prodi') BIAR NAMA PRODI KETARIK SEKALIGUS
+        $berita = Berita::with('prodi')->latest()->get();
 
         return view('welcome', compact('sliders', 'prodi', 'berita'));
     }
@@ -98,10 +99,9 @@ class PublicController extends Controller
         $gurubesar = GuruBesar::all();
         $visi = VisiPendidikan::first();
 
-        // TAMBAHKAN BARIS INI BIAR DATA BERITA IKUT KEBAWA KE HALAMAN PENDIDIKAN
-        $berita = Berita::latest()->get();
+        // TAMBAHKAN with('prodi') DI SINI JUGA KARENA ADA NEWS SLIDER DI HALAMAN INI
+        $berita = Berita::with('prodi')->latest()->get();
 
-        // JANGAN LUPA TAMBAHKAN 'berita' DI DALAM COMPACT
         return view('public.pendidikan', compact('sliders', 'prodi', 'gurubesar', 'visi', 'berita'));
     }
 
